@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>T4E 2026 · Format Check</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+  :root{
+    --bg:#ffffff;
+    --bg-2:#f5f5f7;
+    --ink:#1d1d1f;
+    --ink-2:#424245;
+    --muted:#6e6e73;
+    --faint:#86868b;
+    --hair:#d2d2d7;
+    --hair-2:#e8e8ed;
+    --blue:#0071e3;
+    --blue-h:#0077ed;
+    --link:#0066cc;
+    --good:#1d9d4f;
+    --warn:#c77700;
+    --bad:#e3261c;
+    --info:#0071e3;
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Helvetica Neue",Inter,"Segoe UI",Roboto,Arial,sans-serif;
+    --r-lg:28px; --r-md:18px;
+    --ease:cubic-bezier(.28,.11,.32,1);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:17px;line-height:1.47;letter-spacing:-.022em}
+  a{color:var(--link);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ---------- Global nav ---------- */
+  .gnav{position:sticky;top:0;z-index:50;height:52px;background:rgba(251,251,253,.8);
+    backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+    border-bottom:1px solid rgba(0,0,0,.08)}
+  .gnav-in{max-width:1024px;margin:0 auto;height:100%;padding:0 22px;display:flex;align-items:center;justify-content:space-between}
+  .brand{display:flex;align-items:center;gap:9px;color:var(--ink);font-weight:600;font-size:15px;letter-spacing:-.01em}
+  .brand:hover{text-decoration:none}
+  .brand i{width:22px;height:22px;border-radius:7px;background:linear-gradient(135deg,#0071e3,#5e5ce6 55%,#bf5af2);display:inline-block;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25)}
+  .gnav nav{display:flex;gap:22px}
+  .gnav nav a{color:var(--ink-2);font-size:12.5px;letter-spacing:-.01em;opacity:.85}
+  .gnav nav a:hover{opacity:1;text-decoration:none;color:var(--ink)}
+  @media (max-width:560px){.gnav nav a.hide-sm{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{text-align:center;padding:92px 22px 64px;overflow:hidden}
+  .eyebrow{font-size:19px;font-weight:600;color:var(--bad);letter-spacing:.01em;margin-bottom:6px;
+    background:linear-gradient(90deg,#0071e3,#5e5ce6,#bf5af2);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero h1{margin:0;font-size:clamp(52px,9vw,96px);font-weight:700;letter-spacing:-.045em;line-height:1.02}
+  .hero .lede{margin:18px auto 0;max-width:640px;font-size:clamp(19px,2.3vw,24px);line-height:1.35;color:var(--muted);font-weight:500;letter-spacing:-.015em}
+  .hero .ctas{margin-top:30px;display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+  .hero .ctas a{font-size:17px}
+  .hero .ctas a::after{content:" ›"}
+  .fade-in{animation:fadeUp .9s var(--ease) both}
+  .fade-in.d2{animation-delay:.08s}.fade-in.d3{animation-delay:.16s}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+
+  /* ---------- Sections ---------- */
+  .band{background:var(--bg-2);padding:72px 22px 88px}
+  .container{max-width:1024px;margin:0 auto}
+  .sec-head{text-align:center;margin-bottom:36px}
+  .sec-head h2{margin:0;font-size:clamp(34px,5vw,48px);font-weight:700;letter-spacing:-.035em;line-height:1.08}
+  .sec-head p{margin:10px 0 0;color:var(--muted);font-size:19px;font-weight:500}
+
+  .tile{background:var(--bg);border-radius:var(--r-lg);box-shadow:0 2px 12px rgba(0,0,0,.04)}
+
+  /* Upload tile */
+  .studio{display:grid;grid-template-columns:1.45fr 1fr;overflow:hidden}
+  @media (max-width:820px){.studio{grid-template-columns:1fr}}
+  .studio > div{padding:36px}
+  .studio > div + div{border-left:1px solid var(--hair-2)}
+  @media (max-width:820px){.studio > div + div{border-left:0;border-top:1px solid var(--hair-2)}}
+  .label-sm{font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+
+  .drop{position:relative;border-radius:22px;padding:48px 24px;text-align:center;cursor:pointer;
+    background:var(--bg-2);border:1.5px dashed transparent;transition:all .35s var(--ease)}
+  .drop:hover{background:#eeeef1}
+  .drop:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(0,113,227,.35)}
+  .drop.drag{border-color:var(--blue);background:#eaf3fe;transform:scale(1.012)}
+  .drop-ic{width:64px;height:64px;margin:0 auto 18px;border-radius:18px;display:grid;place-items:center;color:#fff;
+    background:linear-gradient(135deg,#0071e3,#5e5ce6);box-shadow:0 10px 24px -8px rgba(0,113,227,.55)}
+  .drop strong{display:block;font-size:24px;font-weight:700;letter-spacing:-.03em;margin-bottom:4px}
+  .drop .small{display:block;font-size:15px;color:var(--muted)}
+  .fmt{margin-top:6px;font-size:13px;color:var(--faint)}
+  input[type=file]{display:none}
+  #fileMeta:not(:empty){margin-top:16px;padding:14px 16px;border-radius:14px;background:#eaf3fe;color:var(--ink-2);font-size:14px;display:flex;align-items:center;gap:10px}
+  #fileMeta:not(:empty)::before{content:"";flex:0 0 8px;height:8px;border-radius:50%;background:var(--blue)}
+  .filename{font-weight:600;color:var(--ink);word-break:break-all}
+  .tip{margin-top:14px;font-size:12.5px;color:var(--faint);line-height:1.5;letter-spacing:-.005em}
+
+  /* Controls */
+  .field{margin-bottom:18px}
+  label{display:block;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:8px;letter-spacing:-.01em}
+  label span{font-weight:400;color:var(--faint)}
+  input[type=number],select{width:100%;height:48px;padding:0 16px;border-radius:12px;border:1px solid var(--hair);background:var(--bg);
+    font:inherit;font-size:16px;color:var(--ink);transition:border-color .2s,box-shadow .2s;appearance:none;-webkit-appearance:none}
+  select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+  input[type=number]:focus,select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 4px rgba(0,113,227,.18)}
+
+  button{font:inherit;font-size:15px;font-weight:500;letter-spacing:-.01em;border:0;border-radius:980px;padding:12px 22px;cursor:pointer;
+    background:var(--blue);color:#fff;transition:background .2s,transform .15s var(--ease),opacity .2s}
+  button:hover:not(:disabled){background:var(--blue-h)}
+  button:active:not(:disabled){transform:scale(.97)}
+  button:focus-visible{outline:none;box-shadow:0 0 0 4px rgba(0,113,227,.35)}
+  button.secondary{background:rgba(0,0,0,.05);color:var(--ink)}
+  button.secondary:hover:not(:disabled){background:rgba(0,0,0,.09)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  #browseBtn{margin-top:22px}
+  .actions{display:flex;gap:10px;margin-top:26px}
+  #analyzeBtn{flex:1;padding:14px 22px;font-size:17px}
+  .note{margin-top:22px;font-size:13px;color:var(--faint);line-height:1.5;letter-spacing:-.005em}
+
+  .progress{height:4px;background:var(--hair-2);border-radius:999px;overflow:hidden;margin-top:20px}
+  .progress span{display:block;height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#0071e3,#5e5ce6,#bf5af2);transition:width .4s var(--ease)}
+
+  /* Coverage */
+  .coverage{margin-top:20px;padding:28px 36px}
+  .coverage summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .coverage summary::-webkit-details-marker{display:none}
+  .coverage summary h3{margin:0;font-size:21px;font-weight:600;letter-spacing:-.025em}
+  .coverage summary .more{font-size:15px;color:var(--link)}
+  .coverage summary .more{white-space:nowrap}
+  .coverage summary .more::after{content:"Show +"}
+  .coverage[open] summary .more::after{content:"Hide −"}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+  .chips span{font-size:13px;padding:7px 13px;border-radius:980px;background:var(--bg-2);color:var(--ink-2);letter-spacing:-.005em}
+
+  /* ---------- Results ---------- */
+  #results{padding:88px 22px 40px;animation:fadeUp .8s var(--ease) both}
+  .bento{display:grid;grid-template-columns:1.3fr 1fr 1fr;grid-template-rows:auto auto;gap:16px}
+  @media (max-width:820px){.bento{grid-template-columns:1fr 1fr}}
+  .metric{border-radius:var(--r-lg);padding:26px 28px;background:var(--bg-2);display:flex;flex-direction:column;justify-content:space-between;min-height:168px}
+  .metric .t{font-size:15px;font-weight:600;color:var(--ink-2);letter-spacing:-.015em}
+  .metric .n{font-size:64px;font-weight:700;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}
+  .metric.bad{grid-row:span 2;background:#1d1d1f;color:#f5f5f7;min-height:352px;position:relative;overflow:hidden}
+  .metric.bad::after{content:"";position:absolute;width:420px;height:420px;right:-160px;bottom:-200px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,69,58,.55),rgba(191,90,242,.25) 45%,transparent 70%);filter:blur(10px)}
+  .metric.bad .t{color:#a1a1a6;position:relative;z-index:1}
+  .metric.bad .n{font-size:clamp(96px,14vw,168px);position:relative;z-index:1;
+    background:linear-gradient(180deg,#fff,#ffb3ad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  @media (max-width:820px){.metric.bad{grid-column:1 / -1;grid-row:auto;min-height:240px}}
+  .metric.warn .n{color:var(--warn)}
+  .metric.good .n{color:var(--good)}
+  .metric.total .n{color:var(--ink)}
+  .metric .sub{font-size:13px;color:var(--faint);margin-top:6px}
+  .summary{grid-column:2 / -1;border-radius:var(--r-lg);padding:26px 28px;background:var(--bg-2)}
+  @media (max-width:820px){.summary{grid-column:1 / -1}}
+  .summary h2{margin:0 0 8px;font-size:15px;font-weight:600;color:var(--ink-2);letter-spacing:-.015em}
+  .summary p{margin:0;font-size:21px;line-height:1.38;font-weight:500;letter-spacing:-.022em;color:var(--ink)}
+
+  .section-title{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin:64px 0 22px}
+  .section-title h2{margin:0;font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.035em}
+  .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .seg{display:inline-flex;padding:3px;background:rgba(118,118,128,.12);border-radius:980px}
+  .seg button{background:transparent;color:var(--ink);padding:7px 15px;font-size:13.5px;font-weight:500;border-radius:980px}
+  .seg button:hover:not(:disabled){background:rgba(0,0,0,.04)}
+  .seg button[aria-pressed="true"]{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.04)}
+  .export{display:inline-flex;gap:8px}
+  .export button{padding:9px 16px;font-size:13.5px;display:inline-flex;align-items:center;gap:7px}
+  .export svg{width:14px;height:14px}
+
+  .table-wrap{background:var(--bg);border-radius:var(--r-lg);border:1px solid var(--hair-2);overflow:auto;max-height:720px}
+  table{width:100%;border-collapse:separate;border-spacing:0}
+  th,td{padding:20px 22px;text-align:left;vertical-align:top}
+  th{position:sticky;top:0;z-index:1;background:rgba(255,255,255,.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    font-size:12px;font-weight:600;color:var(--faint);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--hair-2)}
+  td{font-size:15px;line-height:1.47;color:var(--ink-2);border-bottom:1px solid var(--hair-2);letter-spacing:-.012em}
+  tbody tr:last-child td{border-bottom:0}
+  tbody tr{transition:background .2s}
+  tbody tr:hover td{background:#fafafc}
+  td strong{color:var(--ink);font-weight:600}
+  td:last-child{color:var(--ink)}
+  .badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;letter-spacing:-.005em;white-space:nowrap;text-transform:capitalize}
+  .badge::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 14%,transparent)}
+  .PASS{color:var(--good)} .WARNING{color:var(--warn)} .FAIL{color:var(--bad)} .INFO{color:var(--info)}
+
+  #resultRows[data-filter="FAIL"] tr:not(:has(.badge.FAIL)),
+  #resultRows[data-filter="WARNING"] tr:not(:has(.badge.WARNING)),
+  #resultRows[data-filter="PASS"] tr:not(:has(.badge.PASS)),
+  #resultRows[data-filter="INFO"] tr:not(:has(.badge.INFO)){display:none}
+
+  @media (max-width:680px){
+    thead{display:none}
+    table,tbody,tr,td{display:block;width:100%}
+    tbody tr{padding:20px 22px;border-bottom:1px solid var(--hair-2)}
+    tbody tr:last-child{border-bottom:0}
+    td{padding:3px 0;border:0}
+    td:first-child{padding-bottom:10px}
+    td:nth-child(2){font-size:17px}
+    td:nth-child(4){margin-top:8px;padding:12px 14px;border-radius:12px;background:var(--bg-2)}
+  }
+
+  .cat{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cat-opt{margin:0;cursor:pointer;display:block}
+  .cat-opt input{position:absolute;opacity:0;pointer-events:none}
+  .cat-opt span{color:var(--ink);font-weight:400;display:flex;flex-direction:column;gap:2px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--hair);background:var(--bg);transition:border-color .2s,box-shadow .2s,background .2s}
+  .cat-opt span b{font-size:16px;font-weight:600;letter-spacing:-.015em}
+  .cat-opt span small{font-size:13px;color:var(--muted);font-weight:400}
+  .cat-opt:hover span{border-color:#b0b0b8}
+  .cat-opt input:checked + span{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue) inset;background:#f5f9ff}
+  .cat-opt input:focus-visible + span{box-shadow:0 0 0 4px rgba(0,113,227,.25)}
+  .cat-note{margin-top:10px;font-size:13px;color:var(--faint)}
+  .rules-intro{margin:18px 0 12px;font-size:14px;color:var(--muted);line-height:1.5}
+  .rules-wrap{overflow-x:auto}
+  table.rules{width:100%;border-collapse:collapse;font-size:14px}
+  table.rules th{position:static;background:none;backdrop-filter:none;-webkit-backdrop-filter:none;text-align:left;font-size:12px;padding:10px 12px;border-bottom:1px solid var(--hair-2)}
+  table.rules td{padding:11px 12px;border-bottom:1px solid var(--hair-2);vertical-align:top;color:var(--ink-2);font-size:14px}
+  table.rules td.src{color:var(--faint);font-size:13px}
+  table.rules tr:last-child td{border-bottom:0}
+  table.rules tbody tr:hover td{background:transparent}
+  @media (max-width:680px){ table.rules thead{display:none} table.rules,table.rules tbody,table.rules tr,table.rules td{display:block;width:100%} table.rules tr{padding:12px 0;border-bottom:1px solid var(--hair-2)} table.rules tr:last-child{border-bottom:0} table.rules td{padding:2px 0;border:0;background:transparent!important} table.rules td:first-child{padding-bottom:4px;font-size:15px} table.rules td.src{margin-top:4px;padding:0;background:none!important;border-radius:0} }
+  .hidden{display:none!important}
+  .footer{margin-top:28px;color:var(--faint);font-size:12px;line-height:1.6;letter-spacing:-.003em}
+  .mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.95em;color:var(--ink-2)}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;pointer-events:none;
+    background:rgba(29,29,31,.92);color:#f5f5f7;font-size:14px;padding:11px 20px;border-radius:980px;
+    backdrop-filter:blur(20px);transition:all .35s var(--ease);z-index:100}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  .gfoot{background:var(--bg-2);border-top:1px solid var(--hair-2);margin-top:64px}
+  .gfoot-in{max-width:1024px;margin:0 auto;padding:20px 22px 30px;font-size:12px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .gfoot a{color:var(--ink-2)}
+</style>
+</head>
+<body>
+
+<header class="gnav">
+  <div class="gnav-in">
+    <a class="brand" href="https://sites.google.com/view/t4e2026/home?authuser=0" target="_blank" rel="noopener"><i aria-hidden="true"></i>T4E 2026</a>
+    <nav aria-label="Conference links">
+      <a href="#upload">Format Check</a>
+      <a href="https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0" target="_blank" rel="noopener">Guidelines</a>
+      <a class="hide-sm" href="https://sites.google.com/view/t4e2026/home?authuser=0" target="_blank" rel="noopener">Conference</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="eyebrow fade-in">T4E 2026</div>
+  <h1 class="fade-in d2">Format Check.</h1>
+  <p class="lede fade-in d3">Your manuscript, checked against the Springer template in seconds. Right in your browser. Nothing ever leaves it.</p>
+  <div class="ctas fade-in d3">
+    <a href="#upload">Check your paper</a>
+    <a href="https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0" target="_blank" rel="noopener">Read the guidelines</a>
+  </div>
+</section>
+
+<section class="band" id="upload">
+  <div class="container">
+    <div class="sec-head">
+      <h2>Drop it in. Get answers.</h2>
+      <p>PDF, DOCX or DOCM.</p>
+    </div>
+
+    <div class="tile studio">
+      <div>
+        <div class="label-sm">Manuscript</div>
+        <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload manuscript">
+          <div class="drop-ic" aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>
+          </div>
+          <strong>Drop your manuscript</strong>
+          <span class="small">or browse from your computer</span>
+          <div class="fmt">PDF · DOCX · DOCM</div>
+          <button type="button" id="browseBtn">Choose file</button>
+        </div>
+        <input id="fileInput" type="file" accept=".pdf,.docx,.docm,.doc,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-word.document.macroEnabled.12" />
+        <div id="fileMeta" class="small"></div>
+        <div class="tip">Legacy .doc isn't supported — save as .docx first. If drag-and-drop is blocked, use Choose file and open this page directly in Chrome, Safari or Firefox.</div>
+        <div class="progress hidden" id="progress"><span></span></div>
+      </div>
+
+      <div>
+        <div class="label-sm">Options</div>
+        <div class="field">
+          <label>Paper category</label>
+          <div class="cat" role="radiogroup" aria-label="Paper category">
+            <label class="cat-opt"><input type="radio" name="cat" value="long" checked><span><b>Long paper</b><small>12–14 pages</small></span></label>
+            <label class="cat-opt"><input type="radio" name="cat" value="short"><span><b>Short paper</b><small>6–8 pages</small></span></label>
+          </div>
+          <div class="cat-note">Page counts include references. Length is checked automatically.</div>
+        </div>
+        <div class="actions">
+          <button id="analyzeBtn" disabled>Analyze</button>
+          <button id="clearBtn" class="secondary" disabled>Clear</button>
+        </div>
+        <div class="note">Upload the final PDF for an exact page count. Word files are audited style by style — page setup, headings, captions, references, authors, direct formatting.</div>
+      </div>
+    </div>
+
+    <details id="coverage" class="tile coverage">
+      <summary><h3>Every rule, and where it comes from.</h3><span class="more"></span></summary>
+      <p class="rules-intro">Every check comes from Springer’s official proceedings files (Word template splnproc2510, its Quick Start and Technical Instructions, and the llncs LaTeX class v2.25 with its documentation) or the T4E 2026 submission guidelines.</p>
+      <div class="rules-wrap"><table class="rules"><thead><tr><th>Check</th><th>Rule</th><th>Source</th></tr></thead><tbody><tr><td><strong>Paper length</strong></td><td>Long 12–14 pages, short 6–8 pages, references included</td><td class="src">T4E 2026 submission guidelines</td></tr><tr><td><strong>File type</strong></td><td>Submit .docx or PDF — never .docm</td><td class="src">Quick Start; Technical Instructions §1.2</td></tr><tr><td><strong>File name</strong></td><td>Surname_ShortTitle.docx</td><td class="src">Quick Start; Technical Instructions §1.2</td></tr><tr><td><strong>Page setup</strong></td><td>A4, template margins (text area 12.2 × 19.3 cm)</td><td class="src">Word template; llncs.cls; llncsdoc §6.1</td></tr><tr><td><strong>Body text</strong></td><td>Times, 10 pt</td><td class="src">Word template (Normal style)</td></tr><tr><td><strong>Title</strong></td><td>14 pt bold, centred; capitalised; no end punctuation</td><td class="src">Template table of heading levels; llncsdoc §7.1</td></tr><tr><td><strong>Authors</strong></td><td>Real full names, given name first</td><td class="src">llncsdoc §7.2</td></tr><tr><td><strong>ORCID</strong></td><td>[0000-0000-0000-0000], valid check digit</td><td class="src">Technical Instructions §2.1; llncs.cls \orcidID</td></tr><tr><td><strong>Affiliation e-mail/URL</strong></td><td>Typewriter (e-mail/url) style</td><td class="src">Technical Instructions §2.1</td></tr><tr><td><strong>Abstract</strong></td><td>Starts “Abstract.”, 15–250 words</td><td class="src">Word template sample text</td></tr><tr><td><strong>Keywords</strong></td><td>Starts “Keywords:”; each keyword capitalised</td><td class="src">Word template; llncsdoc §7.5</td></tr><tr><td><strong>Headings</strong></td><td>H1 12 pt bold, H2 10 pt bold, numbered; only two numbered levels; H3/H4 run-in</td><td class="src">Template table of heading levels; llncs.cls</td></tr><tr><td><strong>References heading</strong></td><td>Heading 1 style, no number</td><td class="src">Technical Instructions §2.2</td></tr><tr><td><strong>Paragraph indents</strong></td><td>No indent after headings, figures, tables, equations, lists; indent otherwise</td><td class="src">Template sample text; Technical Instructions §2.4</td></tr><tr><td><strong>Figure captions</strong></td><td>“Fig. 1.” below the figure; long captions justified</td><td class="src">Word template; Technical Instructions §2.5</td></tr><tr><td><strong>Table captions</strong></td><td>“Table 1.” above the table</td><td class="src">Word template; Technical Instructions §2.5</td></tr><tr><td><strong>Figures & tables mentioned</strong></td><td>Every figure and table cited in the text</td><td class="src">llncsdoc §4, §13</td></tr><tr><td><strong>Alt text</strong></td><td>Alternative text for every figure</td><td class="src">llncsdoc §10, §13</td></tr><tr><td><strong>Figure & table width</strong></td><td>Within the 12.2 cm text column</td><td class="src">llncs.cls text width</td></tr><tr><td><strong>Citations</strong></td><td>Numbered [1] preferred; labels or author–year accepted</td><td class="src">Word template text; llncsdoc §12</td></tr><tr><td><strong>Reference list</strong></td><td>LNCS format: “Author, F.: Title. Journal 2(5), 99–110 (2016)”</td><td class="src">Word template; splncs04.bst</td></tr><tr><td><strong>Acknowledgments</strong></td><td>9 pt, at the end, before references</td><td class="src">Word template; llncsdoc §11</td></tr><tr><td><strong>Disclosure of Interests</strong></td><td>Required statement before references</td><td class="src">Word template; llncsdoc §11</td></tr><tr><td><strong>Hand-applied formatting</strong></td><td>Use template styles, not manual fonts/sizes</td><td class="src">Quick Start §2; Technical Instructions FAQ</td></tr></tbody></table></div>
+    </details>
+  </div>
+</section>
+
+<section id="results" class="hidden">
+  <div class="container">
+    <div class="sec-head">
+      <h2>Your report.</h2>
+      <p id="reportFile">Here's how your manuscript measures up.</p>
+    </div>
+
+    <div class="bento">
+      <div class="metric bad"><div class="t">Needs fixing</div><div><div class="n" id="failN">0</div></div></div>
+      <div class="metric warn"><div class="t">Warnings</div><div class="n" id="warnN">0</div></div>
+      <div class="metric good"><div class="t">Passed</div><div class="n" id="passN">0</div></div>
+      <div class="summary">
+        <h2>Summary · <span id="totalN">0</span> checks run</h2>
+        <p id="summaryText"></p>
+      </div>
+    </div>
+
+    <div class="section-title">
+      <h2>Findings &amp; fixes.</h2>
+      <div class="toolbar">
+        <div class="seg" role="group" aria-label="Filter findings">
+          <button type="button" data-f="ALL" aria-pressed="true">All</button>
+          <button type="button" data-f="FAIL" aria-pressed="false">Fix</button>
+          <button type="button" data-f="WARNING" aria-pressed="false">Warnings</button>
+          <button type="button" data-f="PASS" aria-pressed="false">Passed</button>
+          <button type="button" data-f="INFO" aria-pressed="false">Info</button>
+        </div>
+        <div class="export">
+          <button class="secondary" id="copyBtn">Copy summary</button>
+          <button class="secondary" id="csvBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>CSV</button>
+          <button id="pdfBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:130px">Status</th>
+          <th style="width:210px">Check</th>
+          <th>What we found</th>
+          <th>How to fix it</th>
+        </tr></thead>
+        <tbody id="resultRows"></tbody>
+      </table>
+    </div>
+
+    <div class="footer">
+      Template baseline: properties extracted from <span class="mono">splnproc2510.docm</span> / <span class="mono">splnproc2510_mac.docm</span> — A4 page size (11906 × 16838 twips), margins, style definitions, paragraph spacing, indentation, numbering links and character styles. Springer proceedings styles include <span class="mono">papertitle</span>, <span class="mono">author</span>, <span class="mono">address</span>, <span class="mono">abstract</span>, <span class="mono">keywords</span>, <span class="mono">heading1</span>, <span class="mono">heading2</span>, <span class="mono">figurecaption</span>, <span class="mono">tablecaption</span> and <span class="mono">referenceitem</span>. Normal body style: Times New Roman 10 pt.
+    </div>
+  </div>
+</section>
+
+<footer class="gfoot">
+  <div class="gfoot-in">
+    <span>T4E 2026 · Technology for Education</span>
+    <span>This check is an aid, not a guarantee. Always confirm against the <a href="https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0" target="_blank" rel="noopener">official guidelines</a>.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(()=>{
+  const $=s=>document.querySelector(s);
+  const toast=msg=>{const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800);};
+
+  // Filters
+  document.querySelectorAll('.seg button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b?'true':'false'));
+    const rows=$('#resultRows');
+    if(b.dataset.f==='ALL') rows.removeAttribute('data-filter'); else rows.dataset.filter=b.dataset.f;
+  }));
+
+  // Show file name in the report header once results render
+  new MutationObserver(()=>{
+    const fn=document.querySelector('#fileMeta .filename')?.textContent;
+    if(fn) $('#reportFile').textContent=fn;
+  }).observe($('#resultRows'),{childList:true});
+
+  // Read findings back from the rendered table (the analysis module owns the data)
+  function findings(){
+    return [...document.querySelectorAll('#resultRows tr')].map(tr=>{
+      const c=[...tr.children].map(td=>td.textContent.trim());
+      return {status:c[0],check:c[1],found:c[2],fix:c[3]};
+    });
+  }
+  function meta(){
+    return {
+      file:document.querySelector('#fileMeta .filename')?.textContent||'manuscript',
+      summary:$('#summaryText').textContent,
+      fail:$('#failN').textContent,warn:$('#warnN').textContent,pass:$('#passN').textContent,total:$('#totalN').textContent,
+      date:new Date().toLocaleString()
+    };
+  }
+  const base=f=>'T4E2026_format_check_'+f.replace(/\.[^.]+$/,'').replace(/[^\w-]+/g,'_');
+  function download(blob,name){
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();
+    setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);
+  }
+
+  // CSV
+  $('#csvBtn').addEventListener('click',()=>{
+    const rows=findings(); if(!rows.length) return;
+    const m=meta(); const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+    const lines=[
+      ['T4E 2026 Springer Format Check'].map(q).join(','),
+      ['File',m.file].map(q).join(','),
+      ['Generated',m.date].map(q).join(','),
+      ['Needs fixing',m.fail,'Warnings',m.warn,'Passed',m.pass,'Checks run',m.total].map(q).join(','),
+      ['Summary',m.summary].map(q).join(','),
+      '',
+      ['Status','Check','What we found','How to fix it'].map(q).join(','),
+      ...rows.map(r=>[r.status,r.check,r.found,r.fix].map(q).join(','))
+    ];
+    download(new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}),base(m.file)+'.csv');
+    toast('CSV downloaded');
+  });
+
+  // PDF
+  $('#pdfBtn').addEventListener('click',()=>{
+    const rows=findings(); if(!rows.length) return;
+    const m=meta();
+    const J=window.jspdf&&window.jspdf.jsPDF;
+    if(!J){ toast('PDF library unavailable — opening print dialog'); setTimeout(()=>window.print(),400); return; }
+    const doc=new J({unit:'pt',format:'a4'});
+    const W=doc.internal.pageSize.getWidth(), M=44;
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,113,227); doc.text('T4E 2026',M,54);
+    doc.setFontSize(24); doc.setTextColor(29,29,31); doc.text('Format check report',M,84);
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(110,110,115);
+    doc.text(doc.splitTextToSize(m.file,W-2*M),M,104); doc.text(m.date,M,118);
+    const boxes=[['Needs fixing',m.fail,[227,38,28]],['Warnings',m.warn,[199,119,0]],['Passed',m.pass,[29,157,79]],['Checks run',m.total,[29,29,31]]];
+    const bw=(W-2*M-3*10)/4;
+    boxes.forEach(([t,n,c],i)=>{
+      const x=M+i*(bw+10); doc.setFillColor(245,245,247); doc.roundedRect(x,136,bw,62,10,10,'F');
+      doc.setFontSize(8.5); doc.setTextColor(110,110,115); doc.text(t.toUpperCase(),x+12,154);
+      doc.setFont('helvetica','bold'); doc.setFontSize(22); doc.setTextColor(...c); doc.text(String(n),x+12,186); doc.setFont('helvetica','normal');
+    });
+    doc.setFontSize(11); doc.setTextColor(29,29,31);
+    const sl=doc.splitTextToSize(m.summary,W-2*M); doc.text(sl,M,224);
+    const colors={FAIL:[227,38,28],WARNING:[199,119,0],PASS:[29,157,79],INFO:[0,113,227]};
+    doc.autoTable({
+      startY:232+sl.length*13,
+      margin:{left:M,right:M,bottom:44},
+      head:[['Status','Check','What we found','How to fix it']],
+      body:rows.map(r=>[r.status,r.check,r.found,r.fix]),
+      styles:{font:'helvetica',fontSize:8.5,cellPadding:7,textColor:[66,66,69],lineColor:[232,232,237],lineWidth:{bottom:.6},valign:'top'},
+      headStyles:{fillColor:[255,255,255],textColor:[134,134,139],fontStyle:'bold',fontSize:7.5,lineWidth:{bottom:1}},
+      columnStyles:{0:{cellWidth:62,fontStyle:'bold'},1:{cellWidth:96,fontStyle:'bold',textColor:[29,29,31]}},
+      didParseCell:d=>{ if(d.section==='body'&&d.column.index===0) d.cell.styles.textColor=colors[d.cell.raw]||[66,66,69]; },
+      didDrawPage:()=>{ const H=doc.internal.pageSize.getHeight(); doc.setFontSize(8); doc.setTextColor(134,134,139);
+        doc.text('T4E 2026 · Springer format check',M,H-22); doc.text('Page '+doc.internal.getNumberOfPages(),W-M,H-22,{align:'right'}); }
+    });
+    doc.save(base(m.file)+'.pdf');
+    toast('PDF downloaded');
+  });
+
+  // Toast on copy (the module handles the clipboard)
+  $('#copyBtn').addEventListener('click',()=>setTimeout(()=>toast('Summary copied'),60));
+})();
+</script>
+
+<style media="print">
+  .gnav,.hero,#upload,.toolbar,.gfoot,.toast{display:none!important}
+  #results{padding:0;animation:none}
+  .table-wrap{max-height:none;overflow:visible;border:0}
+  th{position:static;backdrop-filter:none}
+  #resultRows[data-filter] tr{display:table-row!important}
+</style>
+
+<script type="module">
+const BRAND = {
+  orgName: 'T4E 2026',
+  submissionGuidelinesUrl: 'https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0',
+  conferenceUrl: 'https://sites.google.com/view/t4e2026/home?authuser=0',
+  logoText: 'T4E'
+};
+
+const $ = s => document.querySelector(s);
+const drop = $('#drop'), input = $('#fileInput'), browseBtn=$('#browseBtn'), analyzeBtn=$('#analyzeBtn'), clearBtn=$('#clearBtn');
+const progress=$('#progress'), progressBar=progress.querySelector('span');
+let selectedFile=null, results=[];
+
+const SPRINGER = {
+  pageWidthTwips:11906, pageHeightTwips:16838,
+  margins:{top:2948,right:2494,bottom:2948,left:2494,header:2381,footer:2324,gutter:0},
+  // Exact properties extracted from the supplied splnproc2510.docm.
+  // Half-points are converted to points; spacing/indent values remain twips.
+  styles:{
+    Normal:{pt:10,font:['Times New Roman'],align:'both',after:0,line:240,firstLine:227},
+    papertitle:{pt:14,bold:true,align:'center',after:480,line:360,firstLine:0},
+    papersubtitle:{pt:12,before:120,line:280},
+    author:{align:'center',after:200,line:220,firstLine:0},
+    address:{pt:9,align:'center',after:200,line:220,firstLine:0},
+    abstract:{pt:9,before:600,after:360,line:220,left:567,right:567},
+    keywords:{align:'left',before:220,firstLine:0},
+    heading1:{pt:12,bold:true,align:'left',before:360,after:240,line:300,left:567,numId:'7'},
+    heading2:{bold:true,align:'left',before:360,after:160,left:567,numId:'7',ilvl:'1'},
+    'heading 3':{before:360,firstLine:0},
+    'heading 4':{before:240,firstLine:0},
+    p1a:{firstLine:0},
+    image:{align:'center',before:240,after:120,firstLine:0},
+    figurecaption:{pt:9,align:'center',before:120,after:240,line:220,firstLine:0},
+    tablecaption:{pt:9,align:'center',before:240,after:120,line:220,firstLine:0},
+    equation:{before:160,after:160,firstLine:0},
+    programcode:{font:['Courier'],align:'left',before:160,after:160,firstLine:0},
+    referenceitem:{pt:9,line:220,numId:'9'},
+    acknowledgments:{pt:9,before:240,firstLine:0},
+    'footnote text':{pt:9,line:220,left:227,hanging:227},
+    'e-mail':{font:['Courier','Courier New']},
+    url:{font:['Courier','Courier New']}
+  }
+};
+
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function add(status, check, found, fix=''){
+  results.push({status,check,found,fix});
+}
+function setProgress(v){
+  progress.classList.remove('hidden'); progressBar.style.width=v+'%';
+}
+function reset(){
+  selectedFile=null; input.value=''; results=[]; analyzeBtn.disabled=true; clearBtn.disabled=true;
+  $('#fileMeta').textContent=''; $('#results').classList.add('hidden'); progress.classList.add('hidden'); progressBar.style.width='0%';
+}
+browseBtn.addEventListener('click',e=>{ e.stopPropagation(); input.click(); });
+drop.addEventListener('click',e=>{ if(e.target!==browseBtn) input.click(); });
+drop.addEventListener('keydown',e=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); input.click(); }});
+drop.addEventListener('dragover',e=>{e.preventDefault();e.stopPropagation();drop.classList.add('drag')});
+drop.addEventListener('dragleave',e=>{e.preventDefault();drop.classList.remove('drag')});
+drop.addEventListener('drop',e=>{
+  e.preventDefault(); e.stopPropagation(); drop.classList.remove('drag');
+  const f=e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+  if(f) choose(f);
+});
+input.addEventListener('change',()=>{if(input.files && input.files[0]) choose(input.files[0])});
+clearBtn.addEventListener('click',reset);
+function choose(f){
+  selectedFile=f; analyzeBtn.disabled=false; clearBtn.disabled=false;
+  $('#fileMeta').innerHTML=`Selected: <span class="filename">${esc(f.name)}</span> · ${(f.size/1024/1024).toFixed(2)} MB`;
+}
+analyzeBtn.addEventListener('click', analyze);
+
+async function analyze(){
+  if(!selectedFile) return;
+  results=[]; analyzeBtn.disabled=true; setProgress(8);
+  const ext=selectedFile.name.split('.').pop().toLowerCase();
+  try{
+    if(ext==='pdf') await analyzePDF(selectedFile);
+    else if(ext==='docx'||ext==='docm') await analyzeWord(selectedFile,ext);
+    else if(ext==='doc'){
+      add('FAIL','File type','This is an old-style .doc file, which the checker can’t read.','In Word, choose File → Save As → Word Document (.docx), then upload the .docx.');
+    } else add('FAIL','File type','This file type isn’t supported.','Upload your paper as a PDF or a Word (.docx) file.');
+  }catch(err){
+    console.error(err);
+    add('FAIL','Couldn’t read the file','Something went wrong while reading this file'+(err&&err.message?` (${err.message})`:'')+'.','Save or export the paper again and re-upload it. If it keeps failing, try the other format (PDF or .docx).');
+  }
+  setProgress(100); render(); analyzeBtn.disabled=false;
+}
+
+function render(){
+  const priority={FAIL:0,WARNING:1,INFO:2,PASS:3};
+  results.sort((a,b)=>priority[a.status]-priority[b.status]);
+  const counts={PASS:0,WARNING:0,FAIL:0,INFO:0}; results.forEach(r=>counts[r.status]++);
+  $('#passN').textContent=counts.PASS; $('#warnN').textContent=counts.WARNING; $('#failN').textContent=counts.FAIL; $('#totalN').textContent=results.length;
+  let s='';
+  if(counts.FAIL) s=`${counts.FAIL} thing${counts.FAIL>1?'s':''} must be fixed before you submit`;
+  else s='Nothing must be fixed';
+  if(counts.WARNING) s+=`, and ${counts.WARNING} more ${counts.WARNING>1?'are':'is'} worth a look`;
+  s+=`. ${counts.PASS} check${counts.PASS===1?'':'s'} passed. Start with the red items below — each one says exactly what to change.`;
+  $('#summaryText').textContent=s;
+  $('#resultRows').innerHTML=results.map(r=>`<tr>
+    <td><span class="badge ${r.status}">${r.status}</span></td>
+    <td><strong>${esc(r.check)}</strong></td>
+    <td>${esc(r.found)}</td>
+    <td>${esc(r.fix||'No change needed.')}</td>
+  </tr>`).join('');
+  $('#results').classList.remove('hidden');
+  progress.classList.add('hidden');
+}
+
+$('#copyBtn').addEventListener('click',async()=>{
+  const lines=[`T4E 2026 Springer format check summary for ${selectedFile?.name||'manuscript'}`,''];
+  for(const r of results){
+    if(r.status==='PASS') continue;
+    lines.push(`${r.status} | ${r.check}`);
+    lines.push(`Found: ${r.found}`);
+    lines.push(`Fix: ${r.fix}`);
+    lines.push('');
+  }
+  await navigator.clipboard.writeText(lines.join('\n'));
+  const b=$('#copyBtn'); const old=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=old,1200);
+});
+
+
+function approx(a,b,t){ return Math.abs(a-b)<=t; }
+function pageKind(w,h){
+  const portrait = h>=w;
+  const a = portrait ? [w,h] : [h,w];
+  if(approx(a[0],595.28,8) && approx(a[1],841.89,8)) return 'A4';
+  if(approx(a[0],612,8) && approx(a[1],792,8)) return 'US Letter';
+  return 'Other';
+}
+function seqIssues(nums){
+  if(!nums.length) return {duplicates:[],missing:[],starts:null};
+  const sorted=[...new Set(nums)].sort((a,b)=>a-b);
+  const duplicates=[...new Set(nums.filter((n,i)=>nums.indexOf(n)!==i))].sort((a,b)=>a-b);
+  const missing=[];
+  for(let n=sorted[0];n<=sorted[sorted.length-1];n++) if(!sorted.includes(n)) missing.push(n);
+  return {duplicates,missing,starts:sorted[0]};
+}
+function regexNums(text,re){
+  const out=[]; let m; re.lastIndex=0;
+  while((m=re.exec(text))!==null) out.push(parseInt(m[1],10));
+  return out.filter(Number.isFinite);
+}
+function checkCaptionNumbering(text){
+  const figNums=regexNums(text,/\bFig\.\s*(\d+)\b/g);
+  const tableNums=regexNums(text,/\bTable\s+(\d+)\b/g);
+  const longFigure=(text.match(/\bFigure\s+\d+\b/gi)||[]).length;
+  const fi=seqIssues(figNums), ti=seqIssues(tableNums);
+  if(longFigure) add('WARNING','Figure labels',`${longFigure} figure${longFigure===1?' is':'s are'} labelled “Figure 1” style. Springer uses the short form “Fig. 1”.`,'Change figure labels to “Fig. 1.”, “Fig. 2.” and so on. The template’s figure caption style does this for you.');
+  if(figNums.length){
+    if(fi.duplicates.length||fi.missing.length||fi.starts!==1){
+      const bits=[]; if(fi.starts!==1) bits.push(`starts at ${fi.starts} instead of 1`); if(fi.missing.length) bits.push(`${fi.missing.join(', ')} ${fi.missing.length===1?'is':'are'} missing`); if(fi.duplicates.length) bits.push(`${fi.duplicates.join(', ')} ${fi.duplicates.length===1?'is':'are'} used twice`);
+      add('WARNING','Figure numbering',`Figures are numbered ${[...new Set(figNums)].sort((a,b)=>a-b).join(', ')} — ${bits.join('; ')}.`,'Number figures 1, 2, 3… in the order they appear. If you use Word’s caption numbering, select all (Ctrl/Cmd+A) and press F9 to refresh the numbers.');
+    } else add('PASS','Figure numbering',`Figures are numbered in order, 1 to ${Math.max(...figNums)}.`);
+  }
+  if(tableNums.length){
+    if(ti.duplicates.length||ti.missing.length||ti.starts!==1){
+      const bits=[]; if(ti.starts!==1) bits.push(`starts at ${ti.starts} instead of 1`); if(ti.missing.length) bits.push(`${ti.missing.join(', ')} ${ti.missing.length===1?'is':'are'} missing`); if(ti.duplicates.length) bits.push(`${ti.duplicates.join(', ')} ${ti.duplicates.length===1?'is':'are'} used twice`);
+      add('WARNING','Table numbering',`Tables are numbered ${[...new Set(tableNums)].sort((a,b)=>a-b).join(', ')} — ${bits.join('; ')}.`,'Number tables 1, 2, 3… in the order they appear. If you use Word’s caption numbering, select all (Ctrl/Cmd+A) and press F9 to refresh the numbers.');
+    } else add('PASS','Table numbering',`Tables are numbered in order, 1 to ${Math.max(...tableNums)}.`);
+  }
+}
+
+function checkSectionNumberingFromLines(lines){
+  const top = [];
+  const sub = [];
+  for(const line of lines){
+    const t=line.text.trim();
+    let m=t.match(/^(\d+)\.?\s+([A-Z][^\n]{1,100})$/);
+    if(m && line.size>=10.5) top.push(parseInt(m[1],10));
+    m=t.match(/^(\d+)\.(\d+)\s+([A-Z][^\n]{1,100})$/);
+    if(m) sub.push(`${m[1]}.${m[2]}`);
+  }
+  const u=[...new Set(top)];
+  if(u.length>=2){
+    let ok=true; for(let i=1;i<u.length;i++) if(u[i]!==u[i-1]+1) ok=false;
+    if(ok) add('PASS','Section numbering',`Sections are numbered in order (${u.join(', ')}).`);
+    else add('WARNING','Section numbering',`Section numbers go ${u.join(', ')} — a number looks skipped or out of order.`,'Renumber the main sections 1, 2, 3… in order. Using the template’s heading styles keeps the numbering automatic.');
+  } else {
+    add('INFO','Section numbering','Couldn’t read enough section headings from this PDF to check their numbering.','Nothing to do unless you know a section number is wrong. Checking the Word file gives a more reliable result.');
+  }
+}
+
+function clusterPdfLines(items){
+  const raw=[];
+  for(const it of items){
+    if(!it.str || !it.str.trim()) continue;
+    const fs=Math.hypot(it.transform[2],it.transform[3]) || Math.hypot(it.transform[0],it.transform[1]);
+    raw.push({text:it.str, x:it.transform[4], y:it.transform[5], w:it.width||0, size:fs, font:it.fontName||''});
+  }
+  raw.sort((a,b)=> b.y-a.y || a.x-b.x);
+  const lines=[];
+  for(const it of raw){
+    let line=lines.find(l=>Math.abs(l.y-it.y)<=2.2);
+    if(!line){ line={y:it.y,items:[]}; lines.push(line); }
+    line.items.push(it);
+  }
+  return lines.map(l=>{
+    l.items.sort((a,b)=>a.x-b.x);
+    const text=l.items.map(x=>x.text).join(' ').replace(/\s+/g,' ').trim();
+    const x0=Math.min(...l.items.map(x=>x.x));
+    const x1=Math.max(...l.items.map(x=>x.x+x.w));
+    const chars=l.items.reduce((s,x)=>s+x.text.trim().length,0);
+    const weighted=l.items.reduce((s,x)=>s+x.size*Math.max(1,x.text.trim().length),0)/Math.max(1,chars);
+    return {text,y:l.y,x0,x1,width:x1-x0,size:weighted,items:l.items};
+  }).filter(l=>l.text);
+}
+
+function median(arr){
+  if(!arr.length) return null;
+  const a=[...arr].sort((x,y)=>x-y), m=Math.floor(a.length/2);
+  return a.length%2?a[m]:(a[m-1]+a[m])/2;
+}
+
+function startsCaption(line, kind){
+  const t=line.text.trim();
+  if(kind==='fig') return /^(Fig\.\s*\d+|Figure\s+\d+)\s*[:.]/i.test(t);
+  return /^Table\s+\d+\s*[:.]/i.test(t);
+}
+
+function captionNumsFromLines(lines,kind){
+  const nums=[];
+  for(const l of lines){
+    const t=l.text.trim();
+    const re=kind==='fig'?/^(?:Fig\.|Figure)\s*(\d+)\s*[:.]/i:/^Table\s+(\d+)\s*[:.]/i;
+    const m=t.match(re); if(m) nums.push(parseInt(m[1],10));
+  }
+  return nums;
+}
+
+function addCaptionChecksFromLines(lines){
+  const figLines=lines.filter(l=>startsCaption(l,'fig'));
+  const tableLines=lines.filter(l=>startsCaption(l,'table'));
+  const longFig=figLines.filter(l=>/^Figure\s+\d+/i.test(l.text)).length;
+  if(longFig) add('WARNING','Figure labels',`${longFig} figure caption${longFig===1?' starts':'s start'} with “Figure”. Springer uses the short form “Fig.”.`,'Change each caption to start “Fig. 1.”, “Fig. 2.” and so on.');
+  const figNums=captionNumsFromLines(lines,'fig'), tableNums=captionNumsFromLines(lines,'table');
+  for(const [label,nums] of [['Figure',figNums],['Table',tableNums]]){
+    if(!nums.length) continue;
+    const s=seqIssues(nums);
+    if(s.duplicates.length||s.missing.length||s.starts!==1){
+      const bits=[]; if(s.starts!==1) bits.push(`starts at ${s.starts} instead of 1`); if(s.missing.length) bits.push(`${s.missing.join(', ')} ${s.missing.length===1?'is':'are'} missing`); if(s.duplicates.length) bits.push(`${s.duplicates.join(', ')} ${s.duplicates.length===1?'is':'are'} used twice`);
+      add('WARNING',`${label} numbering`,`${label}s are numbered ${nums.join(', ')} — ${bits.join('; ')}.`,`Number ${label.toLowerCase()}s 1, 2, 3… in the order they appear, with no gaps or repeats.`);
+    } else add('PASS',`${label} numbering`,`${label}s are numbered in order, 1 to ${Math.max(...nums)}.`);
+  }
+  if(figLines.length||tableLines.length) add('PASS','Captions found',`Found ${figLines.length} figure caption${figLines.length===1?'':'s'} and ${tableLines.length} table caption${tableLines.length===1?'':'s'}.`);
+}
+
+
+function wordCount(s){ return (s||'').trim().split(/\s+/).filter(Boolean).length; }
+
+function extractAbstractText(text){
+  const m=text.match(/\bAbstract[.:]?\s*([\s\S]*?)(?=\bKeywords?\s*[:.]|\n\s*1[\.\s]+\s*[A-Z]|\n\s*Introduction\b)/i);
+  return m ? m[1].replace(/\s+/g,' ').trim() : '';
+}
+
+function checkAbstractLength(text){
+  const abs=extractAbstractText(text);
+  if(!abs) return;
+  const n=wordCount(abs);
+  if(n>=15 && n<=250) add('PASS','Abstract length',`The abstract is about ${n} words — within the 15–250 word limit.`);
+  else add('WARNING','Abstract length',`The abstract is about ${n} words. Springer asks for 15–250 words.`,n>250?`Shorten the abstract by about ${n-250} words.`:'Expand the abstract to at least 15 words.');
+}
+
+function checkCitationStyle(text){
+  const numeric=(text.match(/\[(?:\d+)(?:\s*[,–-]\s*\d+)*\]/g)||[]).length;
+  const authorYear=(text.match(/\([A-Z][A-Za-zÀ-ž'’.-]+(?:\s+et\s+al\.)?(?:\s*&\s*[A-Z][A-Za-zÀ-ž'’.-]+)?\s*,\s*(?:19|20)\d{2}[a-z]?\)/g)||[]).length
+                  +(text.match(/[A-Z][A-Za-zÀ-ž'’.-]+\s+et\s+al\.\s*\((?:19|20)\d{2}[a-z]?\)/g)||[]).length;
+  if(numeric>=3 && authorYear===0){
+    add('PASS','Citation style',`Citations use numbered brackets like [1] (${numeric} found), as Springer prefers.`);
+  } else if(authorYear>=3 && numeric===0){
+    add('INFO','Citation style',`Citations use author–year style, e.g. (Sharma, 2021) — ${authorYear} found. Springer accepts this, but prefers numbered brackets like [1].`,'No change required. If you want to switch, choose the “Springer LNCS” style in Zotero, Mendeley or EndNote.');
+  } else if(authorYear>numeric && authorYear>=3){
+    add('WARNING','Citation style',`Citations mix two styles: ${authorYear} author–year, e.g. (Sharma, 2021), and ${numeric} numbered, like [1].`,'Use one style throughout. Springer prefers numbered citations [1], [2]… (choose the “Springer LNCS” style in Zotero, Mendeley or EndNote).');
+  } else if(numeric){
+    add('PASS','Citation style',`Citations use numbered brackets like [1] (${numeric} found).`);
+  } else {
+    add('INFO','Citation style','Couldn’t tell which citation style the paper uses.','Make sure in-text citations are numbered in brackets, e.g. [1], [2].');
+  }
+}
+
+const STYLE_LABELS={Normal:'Normal',papertitle:'title',papersubtitle:'subtitle',author:'author',address:'affiliation',abstract:'abstract',keywords:'keywords',
+  heading1:'Heading 1',heading2:'Heading 2','heading 3':'Heading 3','heading 4':'Heading 4',p1a:'first paragraph (p1a)',image:'image',
+  figurecaption:'figure caption',tablecaption:'table caption',equation:'equation',programcode:'program code',referenceitem:'reference',
+  acknowledgments:'acknowledgments','footnote text':'footnote','e-mail':'e-mail',url:'URL'};
+function sl(id){ return STYLE_LABELS[id]||id; }
+const PROP_LABELS={pt:'font size',align:'alignment',before:'space above',after:'space below',line:'line spacing',left:'left indent',right:'right indent',
+  firstLine:'first-line indent',hanging:'hanging indent',numId:'numbering',ilvl:'numbering level',bold:'bold',italic:'italic',font:'font'};
+// diffs look like "heading1.before: 240 (template 360)" -> "Heading 1 (space above), abstract (indent)"
+function friendlyDiffs(diffs){
+  const by=new Map();
+  for(const d of diffs){
+    const m=d.match(/^(.+)\.(\w+):/); if(!m) continue;
+    const k=sl(m[1]); if(!by.has(k)) by.set(k,new Set());
+    by.get(k).add(PROP_LABELS[m[2]]||m[2]);
+  }
+  const parts=[...by.entries()].map(([k,v])=>`${k} (${[...v].join(', ')})`);
+  return parts.slice(0,5).join('; ')+(parts.length>5?` and ${parts.length-5} more`:'');
+}
+function shortQuote(t,n=50){ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>n?t.slice(0,n).replace(/\s+\S*$/,'')+'…':t; }
+function normalizeStyleId(id){
+  if(!id) return 'Normal';
+  const map={acknowlegments:'acknowledgments'}; // template's own misspelled style id
+  return map[id]||id;
+}
+
+function fmtTwips(v){ return v===null||v===undefined?'unset':`${v} twips`; }
+
+async function analyzePDF(file){
+  setProgress(15);
+  const pdfjsLib = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+  const data=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument({data}).promise;
+
+  add('INFO','File',`PDF with ${pdf.numPages} page${pdf.numPages===1?'':'s'}.`,'Checking the Word file as well gives more detailed style feedback.');
+
+  checkPaperLength(pdf.numPages,true);
+
+  let allText='';
+  const pages=[], allLines=[], sizes=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    const page=await pdf.getPage(i), vp=page.getViewport({scale:1});
+    const tc=await page.getTextContent();
+    const lines=clusterPdfLines(tc.items).map(l=>({...l,page:i,pageW:vp.width,pageH:vp.height}));
+    const pageText=lines.map(l=>l.text).join('\n');
+    pages.push({w:vp.width,h:vp.height,kind:pageKind(vp.width,vp.height),lines,text:pageText});
+    allLines.push(...lines);
+    allText += '\n'+pageText;
+    for(const l of lines) if(l.size>5&&l.size<40) sizes.push(Math.round(l.size*10)/10);
+    setProgress(15+Math.round(48*i/pdf.numPages));
+  }
+
+  if(/\b(?:Format check report|Preflight report)\b/i.test(pages[0]?.text||'') && /Needs fixing/i.test(pages[0]?.text||'')){
+    results.length=0;
+    add('FAIL','Wrong file','This PDF is a report exported from this checker, not a manuscript.','Upload your paper itself (the PDF or Word file you plan to submit).');
+    return;
+  }
+
+  // ---------- Core Springer layout fingerprint ----------
+  // The supplied Word template has a 345.9 pt text block:
+  // A4 width 595.3 pt minus ~124.7 pt left and right margins.
+  // A correct LaTeX LNCS PDF can have a Letter media box but retain this text-block width.
+  const bodyLines=allLines.filter(l =>
+    l.page>=2 &&
+    l.text.length>=45 &&
+    l.size>=9.3 && l.size<=10.6 &&
+    !/^(Fig\.|Figure|Table)\s+\d+/i.test(l.text)
+  );
+  const medWidth=median(bodyLines.map(l=>l.width));
+  const medLeft=median(bodyLines.map(l=>l.x0));
+  const centers=bodyLines.map(l=>(l.x0+l.x1)/2);
+  const medCenter=median(centers);
+  const pageCenter=median(bodyLines.map(l=>l.pageW/2));
+  const expectedWidth=345.9;
+  const widthError=medWidth===null?999:Math.abs(medWidth-expectedWidth);
+  const centerError=(medCenter===null||pageCenter===null)?999:Math.abs(medCenter-pageCenter);
+
+  if(medWidth!==null && widthError<=22 && centerError<=12){
+    add('PASS','Text width',`The text area is the right width for Springer (about ${(medWidth/28.35).toFixed(1)} cm) and centred on the page.`);
+  } else if(medWidth!==null && widthError<=40 && centerError<=18){
+    add('WARNING','Text width',`The text area is about ${(medWidth/28.35).toFixed(1)} cm wide — close to, but not exactly, Springer’s 12.2 cm.`,'Check the page margins against the Springer template (Layout → Margins in Word).');
+  } else if(medWidth!==null){
+    add('FAIL','Text width',`The text area is about ${(medWidth/28.35).toFixed(1)} cm wide, but Springer pages use a narrower 12.2 cm column. The paper doesn’t seem to be using the Springer template.`,'Copy your content into the official Springer Word template (or use the LaTeX class) rather than adjusting fonts and margins by hand.');
+  } else {
+    add('WARNING','Text width','Couldn’t measure the text area in this PDF — it may be a scanned or image-only file.','Export the PDF straight from Word or LaTeX (not by scanning or printing to image), then check it again.');
+  }
+
+  // Media-box size is secondary, not a stand-alone failure.
+  const kinds=[...new Set(pages.map(p=>p.kind))];
+  if(kinds.length===1 && kinds[0]==='A4'){
+    add('PASS','Paper size','All pages are A4.');
+  } else if(kinds.length===1 && kinds[0]==='US Letter'){
+    if(widthError<=22 && centerError<=12)
+      add('INFO','Paper size','Pages are US Letter size rather than A4, but the layout otherwise matches Springer.','Usually fine. If you can, set the paper size to A4 before exporting the PDF.');
+    else
+      add('WARNING','Paper size','Pages are US Letter size, not A4, and the layout doesn’t match Springer either.','Use the official Springer template, which is set up for A4.');
+  } else {
+    add('WARNING','Paper size',`Pages come in more than one size (${kinds.join(' / ')}).`,'Set every page to A4 before exporting the PDF.');
+  }
+
+  // ---------- Front matter fingerprint ----------
+  const p1=pages[0]?.text||'', p2=pages[1]?.text||'';
+  const p1HasAbstract=/\bAbstract[.:]?\b/i.test(p1);
+  const p1HasKeywords=/\bKeywords?\s*[:.]/i.test(p1);
+  const kwAt=p1.search(/\bKeywords?\s*[:.]/i);
+  const p1HasIntro=/^\s*1\.?\s+[A-Z][A-Za-z]/m.test(kwAt>=0?p1.slice(kwAt):p1);
+  const p2HasAbstract=/\bAbstract[.:]?\b/i.test(p2);
+  const titleLines=(pages[0]?.lines||[]).filter(l=>l.size>=13 && l.text.length>8);
+
+  if(titleLines.length && p1HasAbstract){
+    add('PASS','First page','The title and abstract are both on page 1, as they should be.');
+  } else if(titleLines.length && p2HasAbstract && !p1HasAbstract){
+    add('FAIL','First page','The abstract starts on page 2. In Springer papers the title, authors, abstract and keywords all sit together on page 1.','Remove any page break or large gaps after the title so the abstract follows directly on page 1.');
+  } else if(!p1HasAbstract){
+    add('WARNING','First page','No abstract found on page 1.','Page 1 should have the title, the authors, then a paragraph starting “Abstract.” followed by “Keywords:”.');
+  }
+  if(p1HasKeywords) add('PASS','Keywords','Keywords are on page 1.');
+  else if(/\bKeywords?\b/i.test(allText)) add('WARNING','Keywords','Keywords are there, but not on page 1.','Put the keywords line directly under the abstract.');
+  if(p1HasIntro) add('PASS','First section','Section 1 starts on page 1, straight after the abstract.');
+  else if(p1HasAbstract && !p1HasIntro) add('INFO','First section','Section 1 starts on page 2.','Fine if the abstract is long. Otherwise, remove any page break after the keywords.');
+
+  // ---------- Typography ----------
+  // Measure body size from full-width lines between the keywords and the credits/references,
+  // so the 9 pt abstract, captions, tables and references don't skew it.
+  let common=null;
+  {
+    const idxKw=allLines.findIndex(l=>/^\s*Keywords?\b/i.test(l.text));
+    let idxEnd=allLines.findIndex((l,i)=>i>idxKw && /^\s*(References|Bibliography|Acknowledg(?:e)?ments?\.?|Disclosure of Interests)\b/i.test(l.text));
+    if(idxEnd<0) idxEnd=allLines.length;
+    const region=allLines.slice(idxKw+1,idxEnd).filter(l=>l.text.length>=45 && medWidth && l.width>=medWidth*0.8 && !/^(Fig\.|Figure|Table)\s*\d+/i.test(l.text));
+    const bySize=new Map();
+    for(const l of region){ const k=Math.round(l.size*2)/2; bySize.set(k,(bySize.get(k)||0)+l.text.length); }
+    common=[...bySize].sort((a,b)=>b[1]-a[1])[0]?.[0] ?? modeRounded(sizes);
+  }
+  if(common && common>=9.4&&common<=10.4) add('PASS','Body text size',`Body text is ${common.toFixed(0)} pt, as Springer requires.`);
+  else if(common) add('WARNING','Body text size',`Most text is about ${common.toFixed(1)} pt. Springer body text should be 10 pt.`,'Set the main text to 10 pt Times (use the template’s Normal style).');
+
+  // A title is normally around 14 pt, headings around 12 pt.
+  const p1Large=(pages[0]?.lines||[]).filter(l=>l.size>=13.2&&l.size<=16.5&&l.text.length>8);
+  if(p1Large.length) add('PASS','Title size',`The title is about ${median(p1Large.map(l=>l.size)).toFixed(0)} pt, as expected.`);
+  else add('WARNING','Title size','Couldn’t find a title of the expected size (14 pt bold) on page 1.','Format the title as 14 pt bold, centred — the template’s title style does this.');
+
+  // ---------- Structure, sections, captions ----------
+  checkTextStructure(allText);
+  checkSectionNumberingFromLines(allLines);
+  addCaptionChecksFromLines(allLines);
+
+  // ---------- Running headers / page furniture ----------
+  let headerPages=0;
+  for(const p of pages.slice(1)){
+    const topBand=p.lines.filter(l=>l.y>p.h-115 && l.size>=8 && l.size<=10 && l.text.length>2);
+    if(topBand.length) headerPages++;
+  }
+  if(pdf.numPages>3 && headerPages>=Math.floor((pdf.numPages-1)*0.6))
+    add('PASS','Page headers',`Page headers were found on ${headerPages} pages.`);
+  else if(pdf.numPages>3)
+    add('INFO','Page headers',headerPages?`Only ${headerPages} of ${pdf.numPages-1} pages ${headerPages===1?'has':'have'} a header at the top.`:'The pages have no header at the top.','Optional. Springer’s sample paper shows the author names and a short title at the top of pages; Springer adds final page headers during production.');
+
+  // ---------- Template content conventions ----------
+  checkAbstractLength(allText);
+  checkCitationStyle(allText);
+
+  // Paragraph indentation fingerprint: Springer body text normally uses a first-line indent,
+  // while the first paragraph after headings/captions/lists is not indented.
+  const bodyByPage=new Map();
+  for(const l of allLines){
+    if(l.size>=9.3&&l.size<=10.6&&l.text.length>=35&&!/^(Fig\.|Figure|Table)\s+\d+/i.test(l.text)){
+      if(!bodyByPage.has(l.page)) bodyByPage.set(l.page,[]);
+      bodyByPage.get(l.page).push(l);
+    }
+  }
+  let indentSamples=[];
+  for(const arr of bodyByPage.values()){
+    const lefts=arr.map(x=>x.x0).sort((a,b)=>a-b);
+    if(lefts.length>5){
+      const base=lefts[Math.floor(lefts.length*0.25)];
+      for(const x of lefts) if(x-base>6&&x-base<18) indentSamples.push(x-base);
+    }
+  }
+  if(indentSamples.length>=5){
+    add('PASS','Paragraph indents','Paragraphs start with a small first-line indent, as in Springer style.');
+  } else {
+    add('INFO','Paragraph indents','Couldn’t check paragraph indents reliably from the PDF.','Nothing to do unless you changed indents by hand. Checking the Word file gives a clearer result.');
+  }
+
+  // ---------- ORCID iDs ----------
+  checkOrcids(pages.slice(0,2).map(p=>p.text).join('\n'));
+
+  // ---------- Rules from Springer's documentation ----------
+  {
+    const l1=pages[0]?.lines||[];
+    const tl=l1.filter((l,i)=>l.size>=13 && i<12).map(l=>l.text).join(' ');
+    checkTitleRules(tl);
+    const kwStart=allLines.findIndex(l=>/^\s*Keywords?\s*[:.]/i.test(l.text));
+    if(kwStart>=0){
+      let kw=allLines[kwStart].text;
+      for(let i=kwStart+1;i<Math.min(allLines.length,kwStart+3);i++){ const l=allLines[i]; if(/^\s*\d+\.?\s+\p{Lu}/u.test(l.text) || l.size>9.6) break; kw+=' '+l.text; }
+      checkKeywordCaps(kw);
+    }
+    const refIdx=allLines.findIndex(l=>/^\s*References\s*$/i.test(l.text));
+    const credIdx=allLines.findIndex(l=>/^\s*(Acknowledg(?:e)?ments?|Disclosure of Interests)\b/i.test(l.text));
+    checkCredits(/Disclosure of Interests/i.test(allText), refIdx>=0 && credIdx>refIdx);
+    const capLines=allLines.filter(l=>/^(?:Fig\.|Figure|Table)\s*\d+\s*[.:]/i.test(l.text));
+    checkCaptionPunctuation(capLines.map(l=>l.text));
+    // re-join words hyphenated across lines, e.g. “Ta-” + “ble 1”
+    const bodyText=allLines.filter(l=>!capLines.includes(l)).map(l=>l.text).join('\n').replace(/(\p{L})-\n(\p{Ll})/gu,'$1$2').replace(/\n/g,' ');
+    checkFloatsReferenced(bodyText, captionNumsFromLines(allLines,'fig'), captionNumsFromLines(allLines,'table'));
+    checkHeadingDepth(allLines.map(l=>l.text));
+    if(refIdx>=0){
+      const refText=allLines.slice(refIdx+1).map(l=>l.text).join(' ');
+      const entries=refText.split(/\s(?=\d{1,3}\.\s+\p{Lu})/u).filter(Boolean);
+      checkReferenceFormat(entries);
+    }
+  }
+
+  // ---------- Author names ----------
+  {
+    const l1=pages[0]?.lines||[];
+    const lastTitle=l1.reduce((k,l,i)=>(l.size>=13 && l.text.length>3 && i<Math.min(l1.length,12))?i:k,-1);
+    let absIdx=l1.findIndex(l=>/^\s*Abstract\b/i.test(l.text));
+    if(absIdx<0) absIdx=Math.min(l1.length,lastTitle+10);
+    const between=l1.slice(lastTitle+1,absIdx).filter(l=>!AFFILIATION_WORDS.test(l.text) && !looksLikeSentence(l.text) && l.size>=9 && l.size<13);
+    if(lastTitle<0) add('WARNING','Author names','Couldn’t find the paper title on page 1, so author names weren’t checked.','Make sure page 1 starts with the title, followed by the author names.');
+    else checkAuthorNames(between.map(l=>l.text).join(', '));
+  }
+
+  // Overall fingerprint signal, deliberately not a score.
+  const strongLayout = medWidth!==null && widthError<=22 && centerError<=12 && p1HasAbstract && titleLines.length>0;
+  if(strongLayout)
+    add('PASS','Overall layout','The layout looks like a proper Springer paper — right text width, title and abstract on page 1, correct font sizes.');
+  else
+    add('FAIL','Overall layout','The layout doesn’t look like the Springer template. Matching the font size alone isn’t enough — the page layout needs to match too.','Copy your content into the official Springer template (Word or LaTeX), export a new PDF, and check it again.');
+
+  add('INFO','About PDF checks','A PDF shows how the paper looks, but not which Word styles were used.','For the most complete check, also upload the Word file.');
+}
+
+function modeRounded(arr){
+  if(!arr.length) return null;
+  const m=new Map(); for(const x of arr){const k=Math.round(x*2)/2;m.set(k,(m.get(k)||0)+1)}
+  return [...m.entries()].sort((a,b)=>b[1]-a[1])[0][0];
+}
+
+function checkTextStructure(text){
+  const clean=text.replace(/\s+/g,' ');
+  const hasAbs=/\bAbstract\b[:.\s]/i.test(clean);
+  const hasKey=/\bKeywords?\b[:.\s]/i.test(clean);
+  const hasRef=/\bReferences\b/i.test(clean);
+  add(hasAbs?'PASS':'FAIL','Abstract',hasAbs?'The paper has an abstract.':'No abstract found.',hasAbs?'':'Add an abstract of 15–250 words below the author names, starting with “Abstract.”');
+  add(hasKey?'PASS':'WARNING','Keywords',hasKey?'The paper has keywords.':'No keywords found.',hasKey?'':'Add a line under the abstract starting “Keywords:” with 3–5 keywords.');
+  add(hasRef?'PASS':'WARNING','References',hasRef?'The paper has a References section.':'No “References” heading found.',hasRef?'':'Add a “References” section at the end, listing sources in the order they are cited.');
+}
+function checkCaptions(text){
+  const figs=(text.match(/\bFig\.\s*\d+/g)||[]).length;
+  const tables=(text.match(/\bTable\s+\d+/g)||[]).length;
+  if(figs||tables) add('PASS','Captions',`Found ${figs} figure label${figs===1?'':'s'} and ${tables} table label${tables===1?'':'s'}.`);
+  else add('INFO','Captions','No figure or table captions found.','If the paper has figures or tables, label them “Fig. 1.” and “Table 1.”.');
+}
+const CATEGORIES={
+  long:{label:'Long paper',min:12,max:14},
+  short:{label:'Short paper',min:6,max:8}
+};
+function selectedCategory(){
+  const v=document.querySelector('input[name="cat"]:checked')?.value||'long';
+  return {key:v,...CATEGORIES[v]};
+}
+// n = page count; exact=false when it is Word's last-saved estimate
+function checkPaperLength(n, exact){
+  const c=selectedCategory();
+  const other=Object.entries(CATEGORIES).find(([k,o])=>k!==c.key && n>=o.min && n<=o.max);
+  const src=exact?`${n} page${n===1?'':'s'}`:`About ${n} page${n===1?'':'s'} (as last saved by Word)`;
+  const range=`${c.min}–${c.max} pages including references`;
+  if(n>=c.min && n<=c.max){
+    add('PASS','Paper length',`${src} — within the ${c.label.toLowerCase()} limit (${range}).`,
+      exact?'':'Confirm the final count by exporting to PDF and checking that file too.');
+    return;
+  }
+  const over=n>c.max, diff=over?n-c.max:c.min-n;
+  const hint=other?` At this length it would fit the ${other[1].label.toLowerCase()} category (${other[1].min}–${other[1].max} pages).`:'';
+  const found=`${src} — ${diff} page${diff===1?'':'s'} ${over?'over the '+c.label.toLowerCase()+' limit':'short of the '+c.label.toLowerCase()+' minimum'} (${range}).${hint}`;
+  let fix=over?`Cut the paper to ${c.max} pages or fewer, references included.`:`Expand the paper to at least ${c.min} pages, references included.`;
+  if(other) fix=`${over?'Cut':'Expand'} the paper to ${c.min}–${c.max} pages, or submit it as a ${other[1].label.toLowerCase()} if that is what you intend.`;
+  if(!exact) fix+=' Word’s saved page count can be slightly off — export to PDF and check that file for the exact count.';
+  add(exact?'FAIL':'WARNING','Paper length',found,fix);
+}
+
+
+// ---------- Rules taken from Springer's llncs documentation and Word template ----------
+const SMALL_WORDS=new Set('a an the and but or nor for so yet as at by in of on to up via from into onto with over upon per vs than off out amid near past till down like'.split(' '));
+// llncsdoc §7.1: capitalise the first word and all others except articles, conjunctions and prepositions of ≤4 letters; no end punctuation.
+function checkTitleRules(title){
+  const t=String(title||'').replace(/\s+/g,' ').trim();
+  if(!t) return;
+  if(/[.:;,]$/.test(t)) add('WARNING','Title punctuation',`The title ends with “${t.slice(-1)}”. Springer titles have no punctuation at the end.`,'Delete the punctuation mark at the end of the title.');
+  const words=t.split(' ');
+  const clean=w=>w.replace(/^[^\p{L}]+|[^\p{L}-]+$/gu,'');
+  const first=clean(words[0]);
+  const low=(first && /^\p{Ll}/u.test(first)?[first]:[]).concat(words.slice(1).map(clean).filter(w=>w && /^\p{Ll}/u.test(w) && (w.length>4 || !SMALL_WORDS.has(w.toLowerCase()))));
+  if(words.length>=3 && low.length){
+    add('WARNING','Title capitals',`Some words in the title should start with a capital letter: ${[...new Set(low)].slice(0,6).map(w=>'“'+w+'”').join(', ')}.`,
+      'Capitalise every word of the title except short articles, conjunctions and prepositions (a, an, the, and, or, of, in, on, for, with…), e.g. “Learning Analytics for Engineering Classrooms”.');
+  } else if(words.length>=3) add('PASS','Title capitals','The title is capitalised correctly.');
+}
+// llncsdoc §7.5: capitalise the first letter of each keyword.
+function checkKeywordCaps(kwText){
+  const body=String(kwText||'').replace(/^\s*Keywords?\s*[:.]?\s*/i,'').replace(/[.]\s*$/,'');
+  if(!body.trim()) return;
+  const kws=body.split(/\s*(?:[,;·•·]|\s∙\s)\s*/).map(x=>x.trim()).filter(Boolean);
+  const bad=kws.filter(k=>/^\p{Ll}/u.test(k));
+  if(bad.length) add('WARNING','Keyword capitals',`${bad.length} keyword${bad.length===1?' starts':'s start'} with a small letter: ${bad.slice(0,5).map(k=>'“'+k+'”').join(', ')}.`,'Start each keyword with a capital letter, e.g. “Learning Analytics, Peer Feedback”.');
+  else if(kws.length) add('PASS','Keyword capitals',`All ${kws.length} keywords start with a capital letter.`);
+}
+// Word template + llncs 2.23: "Disclosure of Interests" is mandatory; credits go at the end, just before the references.
+function checkCredits(hasDisclosure, creditsAfterRefs){
+  if(hasDisclosure) add('PASS','Disclosure of Interests','The paper has a “Disclosure of Interests” statement.');
+  else add('WARNING','Disclosure of Interests','No “Disclosure of Interests” statement found. Springer requires one in every paper.',
+    'Add a short paragraph just before the references, starting “Disclosure of Interests.”, e.g. “The authors have no competing interests to declare that are relevant to the content of this article.” (If the submission system asks for it separately, you can give it there instead.)');
+  if(creditsAfterRefs) add('WARNING','Acknowledgments position','The acknowledgments / disclosure statement comes after the references.','Move it to just before the “References” heading.');
+}
+// llncsdoc §4 & §13: every figure and table must be referred to in the text.
+function checkFloatsReferenced(bodyText, figNums, tableNums){
+  const miss=[];
+  for(const n of [...new Set(figNums)]) if(!new RegExp(`\\bFig(?:\\.|ure|s\\.)\\s*(?:\\d+\\s*(?:,|and|–|-)\\s*)*${n}\\b`,'i').test(bodyText)) miss.push(`Fig. ${n}`);
+  for(const n of [...new Set(tableNums)]) if(!new RegExp(`\\bTables?\\s*(?:\\d+\\s*(?:,|and|–|-)\\s*)*${n}\\b`,'i').test(bodyText)) miss.push(`Table ${n}`);
+  if(!figNums.length && !tableNums.length) return;
+  if(miss.length) add('WARNING','Figures & tables mentioned',`${miss.join(', ')} ${miss.length===1?'is':'are'} never mentioned in the text.`,'Refer to every figure and table in the text, e.g. “as shown in Fig. 2” or “see Table 1”.');
+  else add('PASS','Figures & tables mentioned','Every figure and table is referred to in the text.');
+}
+// llncs.cls: only two heading levels are numbered (secnumdepth 2); lower levels are run-in headings.
+function checkHeadingDepth(lines){
+  const deep=lines.filter(t=>/^\s*\d+\.\d+\.\d+\.?\s+\p{Lu}/u.test(t) && t.length<120);
+  if(deep.length) add('WARNING','Heading levels',`${deep.length} heading${deep.length===1?' is':'s are'} numbered three levels deep, e.g. “${shortQuote(deep[0],50)}”. Springer numbers only two levels (1 and 1.1).`,
+    'Remove the number from third-level headings and format them as bold run-in headings (the heading, then the text on the same line).');
+}
+// Caption labels are "Fig. 1." / "Table 1." — followed by a full stop (template sample text and llncs.cls \@makecaption).
+function checkCaptionPunctuation(captionTexts){
+  const colon=captionTexts.filter(t=>/^(?:Fig\.|Figure|Table)\s*\d+\s*:/i.test(t.trim()));
+  if(colon.length) add('WARNING','Caption labels',`${colon.length} caption${colon.length===1?' uses':'s use'} a colon after the number, e.g. “${shortQuote(colon[0],40)}”. Springer uses a full stop: “Fig. 1.” / “Table 1.”`,'Replace the colon after the caption number with a full stop.');
+}
+// splncs04 / Word template reference format: "Author, F.: Title. Journal 2(5), 99–110 (2016)" — year at the end.
+function checkReferenceFormat(entries){
+  const e=entries.map(x=>x.replace(/^\s*\[?\d+\]?\.?\s*/,'').trim()).filter(x=>x.length>25);
+  if(e.length<3) return;
+  const apa=e.filter(x=>/^[^()]{2,160}?\((?:19|20)\d{2}[a-z]?(?:,[^)]*)?\)\s*\./.test(x) && x.search(/\((?:19|20)\d{2}/)<x.length*0.5);
+  if(apa.length>=Math.ceil(e.length/2)) add('WARNING','Reference format',`${apa.length} of ${e.length} references put the year straight after the authors, e.g. “${shortQuote(e.indexOf(apa[0])>=0?apa[0]:e[0],55)}”. That is APA style; Springer puts the year in brackets at the end.`,
+    'Use the Springer LNCS reference format, e.g. “Sharma, P., Verma, R.: Title of paper. Journal 2(5), 99–110 (2016)”. In Zotero, Mendeley or EndNote choose the “Springer LNCS” style.');
+  else add('PASS','Reference format','References follow the Springer (LNCS) layout.');
+}
+
+// ---------- ORCID iDs ----------
+// Finds anything that looks like an attempt at an ORCID iD and validates it:
+// format (4 groups of 4, last char may be X), no letters, and the ISO 7064 check digit.
+const ORCID_EXAMPLES=new Set(['0000-1111-2222-3333','1111-2222-3333-4444','2222-3333-4444-5555','2222--3333-4444-5555']);
+function orcidCheckDigit(d15){
+  let total=0; for(const ch of d15) total=(total+parseInt(ch,10))*2;
+  const r=(12-total%11)%11; return r===10?'X':String(r);
+}
+function findOrcidCandidates(text){
+  // join pieces a PDF may have split with spaces, e.g. "[0009-0006- 48sd24-4540]"
+  const t=String(text||'').replace(/[\u2010-\u2015\u2212]/g,'-').replace(/\[([^\]\n]{0,60})\]/g,(m,c)=>'['+c.replace(/\s+/g,'')+']')
+                          .replace(/(\w)\s*-\s*(?=\w)/g,'$1-');
+  const found=new Map();
+  const push=raw=>{ const k=raw.replace(/\s+/g,''); if(k && !found.has(k)) found.set(k,k); };
+  // 1) bracketed after a name, as the Springer template does: Name1[0000-0000-0000-0000]
+  for(const m of t.matchAll(/\[([0-9A-Za-z]{2,6}(?:-{1,2}[0-9A-Za-z]{1,8}){2,5})\]/g))
+    if((m[1].match(/\d/g)||[]).length>=8) push(m[1]);
+  // 2) orcid.org links
+  for(const m of t.matchAll(/orcid\.org\/([0-9A-Za-z-]{10,25})/gi)) push(m[1]);
+  // 3) bare iD-shaped strings anywhere (starting 000 like real iDs)
+  for(const m of t.matchAll(/\b(000[0-9A-Za-z]{1,3}(?:-{1,2}[0-9A-Za-z]{1,8}){2,5})\b/g)) push(m[1]);
+  return [...found.keys()];
+}
+function orcidProblem(id){
+  const bad=id.replace(/[0-9X-]/gi,'');
+  if(/[A-WYZa-wyz]/.test(bad)) return `contains letters (“${[...new Set(bad.replace(/[^A-Za-z]/g,''))].join('')}”)`;
+  const g=id.split('-');
+  if(ORCID_EXAMPLES.has(id)) return 'is the template’s example iD, not a real one';
+  if(/--/.test(id)) return 'has a double hyphen “--”';
+  if(g.length!==4 || g.some(x=>x.length!==4)) return `should be four groups of 4 digits, but has ${g.map(x=>x.length).join('-')}`;
+  if(!/^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/i.test(id)) return 'has an “X” in the wrong place — only the very last character can be X';
+  if(ORCID_EXAMPLES.has(id)) return 'is the template’s example iD, not a real one';
+  const digits=id.replace(/-/g,'');
+  if(orcidCheckDigit(digits.slice(0,15))!==digits[15].toUpperCase()) return 'isn’t a valid iD — one of the digits is probably mistyped';
+  return null;
+}
+function checkOrcids(text){
+  const ids=findOrcidCandidates(text);
+  if(!ids.length){
+    if(/\bORCID\b/i.test(text)) add('WARNING','ORCID','“ORCID” is mentioned, but no iD was found next to it.','Write each ORCID iD as 16 digits in four groups, e.g. 0000-0002-1825-0097.');
+    return;
+  }
+  const bad=ids.map(id=>[id,orcidProblem(id)]).filter(([,p])=>p);
+  if(!bad.length){
+    add('PASS','ORCID',`${ids.length} ORCID iD${ids.length===1?' is':'s are'} valid: ${ids.join(', ')}.`);
+    return;
+  }
+  const list=bad.map(([id,p])=>`“${id}” ${p}`).join('; ');
+  add('FAIL','ORCID',ids.length===1?`The ORCID iD ${list}.`:`${bad.length} of ${ids.length} ORCID iDs ${bad.length===1?'is':'are'} wrong: ${list}.`,
+    'Copy each iD exactly from the author’s profile at orcid.org — 16 digits in four groups, e.g. 0000-0002-1825-0097.');
+}
+
+// ---------- Author names ----------
+const AUTHOR_PLACEHOLDER=/\b(?:first|second|third|fourth|fifth)\s+author(?![a-z])|\bauthor\s*(?:name|\d)|\bname\s+surname\b|\banonymous\b|\bauthors?\s+(?:names?\s+)?(?:omitted|removed|hidden)\b|\b(?:blinded|withheld)\s+for\s+review\b|\bxxx+\b/i;
+const AFFILIATION_WORDS=/\b(?:universit|institut|college|department|dept\.?|school|laborator|faculty|centre|center|academy|company|inc\.?|ltd|gmbh|road|street|india|usa|germany|japan|china|e-?mail|@|https?:|www\.|\d{5,6})/i;
+function nameTokens(text){
+  const clean=text.replace(/\[[^\]]*\]/g,' ')
+    .replace(/\(?\d{4}-\d{4}-\d{4}-[\dX]{4}\)?/gi,' ')
+    .replace(/[⋆*†‡§¶✉⋄◦•]/g,' ')
+    .replace(/(\p{L})\d+(?:,\d+)*/gu,'$1')
+    .replace(/\s+/g,' ').trim();
+  return clean.split(/\s*(?:,|;|\band\b|&)\s*/i).map(x=>x.trim()).filter(Boolean)
+    .filter(x=>{
+      const w=x.split(/\s+/).filter(Boolean);
+      return w.length>=2 && w.length<=6 && w.filter(t=>/^\p{Lu}/u.test(t)).length>=2 && !AFFILIATION_WORDS.test(x);
+    });
+}
+// A sentence (long, ends with a full stop) is body text, not an author line
+function looksLikeSentence(t){
+  const w=t.trim().split(/\s+/).length;
+  return w>=10 || (/[.!?]$/.test(t.trim()) && w>=6);
+}
+function checkAuthorNames(authorText){
+  const t=(authorText||'').replace(/\s+/g,' ').trim();
+  if(!t){
+    add('FAIL','Author names','No author names found below the title.',
+      'Add the full name of every author on the line directly below the title (e.g. “Priya Sharma and Rahul Verma”). All T4E 2026 submissions must show author names.');
+    return;
+  }
+  if(AUTHOR_PLACEHOLDER.test(t)){
+    add('FAIL','Author names',`The author line still has the template’s placeholder names (“${shortQuote(t.match(AUTHOR_PLACEHOLDER)[0],30)}”).`,
+      'Replace the placeholders with the real names of all authors.');
+    return;
+  }
+  const names=nameTokens(t);
+  if(names.length){
+    add('PASS','Author names',`Found ${names.length} author${names.length===1?'':'s'}: ${names.slice(0,6).join(', ')}${names.length>6?'…':''}.`);
+  } else {
+    add('WARNING','Author names',`Couldn’t recognise author names below the title. The line there reads: “${shortQuote(t)}”.`,
+      'Write each author as first name and surname, separated by commas or “and” (e.g. “Priya Sharma and Rahul Verma”). If the names are already there, you can ignore this.');
+  }
+}
+
+async function analyzeWord(file,ext){
+  setProgress(12);
+
+  if(ext==='docm'){
+    add('FAIL','File type','This is a macro-enabled Word file (.docm). Springer doesn’t accept .docm files.','In Word, choose File → Save As → Word Document (.docx) and submit that file.');
+  } else {
+    add('PASS','File type','Word (.docx) file — the right format.');
+  }
+
+  const zip=await JSZip.loadAsync(await file.arrayBuffer());
+  const required=['word/document.xml','word/styles.xml'];
+  for(const n of required) if(!zip.file(n)) throw new Error(`The Word package is missing ${n}.`);
+
+  const docXml=await zip.file('word/document.xml').async('text');
+  const stylesXml=await zip.file('word/styles.xml').async('text');
+  const numberingXml=zip.file('word/numbering.xml') ? await zip.file('word/numbering.xml').async('text') : null;
+
+  const P=new DOMParser();
+  const doc=P.parseFromString(docXml,'application/xml');
+  const styles=P.parseFromString(stylesXml,'application/xml');
+  const numbering=numberingXml ? P.parseFromString(numberingXml,'application/xml') : null;
+
+  const w='http://schemas.openxmlformats.org/wordprocessingml/2006/main';
+  const wp='http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
+  const q=(node,local)=>node ? node.getElementsByTagNameNS(w,local) : [];
+  const child=(el,local)=>el ? [...el.children].find(x=>x.localName===local) : null;
+  const val=(el,name='val')=>el?.getAttributeNS(w,name) ?? null;
+  const intVal=(el,name='val')=>{ const v=val(el,name); return v===null?null:parseInt(v,10); };
+  const txtOf=p=>[...q(p,'t')].map(x=>x.textContent).join('');
+  const rawStyle=p=>val(child(child(p,'pPr'),'pStyle'))||'Normal';
+  const pStyleOf=p=>normalizeStyleId(rawStyle(p));
+
+  const body=q(doc,'body')[0];
+  const blocks=[...body.children].filter(x=>x.localName==='p'||x.localName==='tbl');
+  const paras=[...q(doc,'p')];
+  const inTable=p=>{ for(let n=p.parentNode;n;n=n.parentNode){ if(n.localName==='tbl') return true; } return false; };
+  const nonempty=paras.filter(p=>txtOf(p).trim());
+  let fullText=nonempty.map(txtOf).join('\n');
+
+  // ---------- Page setup: exact template comparison ----------
+  const sect=[...q(doc,'sectPr')].pop();
+  const pgSz=child(sect,'pgSz'), pgMar=child(sect,'pgMar');
+
+  if(pgSz){
+    const W=intVal(pgSz,'w'), H=intVal(pgSz,'h');
+    if(Math.abs(W-SPRINGER.pageWidthTwips)<=50 && Math.abs(H-SPRINGER.pageHeightTwips)<=50)
+      add('PASS','Paper size','Paper size is A4, as in the template.');
+    else
+      add('FAIL','Paper size',`Paper size is ${(W/567).toFixed(1)} × ${(H/567).toFixed(1)} cm — it should be A4 (21.0 × 29.7 cm).`,'In Word, go to Layout → Size and choose A4.');
+  } else add('WARNING','Paper size','Couldn’t read the paper size from this file.','In Word, check Layout → Size is set to A4.');
+
+  if(pgMar){
+    const marginIssues=[];
+    for(const k of ['top','right','bottom','left','header','footer','gutter']){
+      const got=intVal(pgMar,k), exp=SPRINGER.margins[k];
+      if(got!==null && Math.abs(got-exp)>35) marginIssues.push(`${({header:'header distance',footer:'footer distance',gutter:'gutter'})[k]||k+' margin'} is ${(got/567).toFixed(2)} cm (should be ${(exp/567).toFixed(2)} cm)`);
+    }
+    if(!marginIssues.length) add('PASS','Margins','Page margins match the template.');
+    else add('FAIL','Margins',`Margins differ from the template: ${marginIssues.join('; ')}.`,'Don’t change margins by hand. Copy your content into a fresh copy of the Springer template, which has the right margins built in.');
+  }
+
+  // ---------- Build style maps ----------
+  const styleEls=[...q(styles,'style')];
+  const styleById=new Map();
+  for(const s of styleEls){
+    const raw=s.getAttributeNS(w,'styleId');
+    styleById.set(normalizeStyleId(raw),{el:s,raw,name:val(child(s,'name'))||raw});
+  }
+
+  function styleProps(id){
+    const s=styleById.get(id)?.el;
+    if(!s) return null;
+    const pPr=child(s,'pPr'), rPr=child(s,'rPr'), rf=child(rPr,'rFonts'), sp=child(pPr,'spacing'), ind=child(pPr,'ind'), np=child(pPr,'numPr');
+    const font=rf?.getAttributeNS(w,'ascii')||rf?.getAttributeNS(w,'hAnsi')||null;
+    return {
+      pt: child(rPr,'sz') ? intVal(child(rPr,'sz'))/2 : null,
+      font,
+      bold: !!child(rPr,'b'),
+      italic: !!child(rPr,'i'),
+      align: val(child(pPr,'jc')),
+      before: sp?.getAttributeNS(w,'before')!==null && sp?.getAttributeNS(w,'before')!==undefined ? parseInt(sp.getAttributeNS(w,'before'),10) : null,
+      after: sp?.getAttributeNS(w,'after')!==null && sp?.getAttributeNS(w,'after')!==undefined ? parseInt(sp.getAttributeNS(w,'after'),10) : null,
+      line: sp?.getAttributeNS(w,'line')!==null && sp?.getAttributeNS(w,'line')!==undefined ? parseInt(sp.getAttributeNS(w,'line'),10) : null,
+      left: ind?.getAttributeNS(w,'left') ? parseInt(ind.getAttributeNS(w,'left'),10) : null,
+      right: ind?.getAttributeNS(w,'right') ? parseInt(ind.getAttributeNS(w,'right'),10) : null,
+      firstLine: ind?.getAttributeNS(w,'firstLine') ? parseInt(ind.getAttributeNS(w,'firstLine'),10) : null,
+      hanging: ind?.getAttributeNS(w,'hanging') ? parseInt(ind.getAttributeNS(w,'hanging'),10) : null,
+      numId: val(child(np,'numId')),
+      ilvl: val(child(np,'ilvl'))
+    };
+  }
+
+  const coreStyles=['Normal','papertitle','papersubtitle','author','address','abstract','keywords','heading1','heading2','heading 3','heading 4','p1a','image','figurecaption','tablecaption','equation','programcode','referenceitem','acknowledgments','footnote text','e-mail','url'];
+  const missing=coreStyles.filter(id=>!styleById.has(id));
+  if(!missing.length) add('PASS','Template styles','All the Springer template styles are in the file.');
+  else add('WARNING','Template styles',`Some Springer styles are missing from the file: ${missing.map(sl).join(', ')}.`,'This usually means the paper wasn’t started from the Springer template. Copy your content into a fresh copy of the template.');
+
+  // Exact style-property comparison, property by property.
+  const diffs=[];
+  for(const [id,exp] of Object.entries(SPRINGER.styles)){
+    const got=styleProps(id);
+    if(!got) continue;
+    for(const prop of ['pt','align','before','after','line','left','right','firstLine','hanging','numId','ilvl']){
+      if(exp[prop]===undefined) continue;
+      const gv=got[prop], ev=exp[prop];
+      if(gv===null && ev===0) { diffs.push(`${id}.${prop}: unset (template ${ev})`); continue; }
+      if(String(gv)!==String(ev)) diffs.push(`${id}.${prop}: ${gv===null?'unset':gv} (template ${ev})`);
+    }
+    if(exp.bold!==undefined && got.bold!==exp.bold) diffs.push(`${id}.bold: ${got.bold} (template ${exp.bold})`);
+    if(exp.italic!==undefined && got.italic!==exp.italic) diffs.push(`${id}.italic: ${got.italic} (template ${exp.italic})`);
+    if(exp.font && got.font && !exp.font.includes(got.font)) diffs.push(`${id}.font: ${got.font} (template ${exp.font.join(' / ')})`);
+  }
+  if(diffs.length===0) add('PASS','Style settings','The template’s styles haven’t been altered — sizes, spacing and indents are as Springer set them.');
+  else add('FAIL','Style settings',`${diffs.length} template style setting${diffs.length===1?' has':'s have'} been changed from Springer’s defaults: ${friendlyDiffs(diffs)}.`,'Don’t edit the template’s styles. Copy your content into a fresh copy of the Springer template, then re-apply the styles to your text.');
+
+  // ---------- Style usage and front matter ----------
+  const usedStyles=new Map();
+  for(const p of nonempty){
+    const sid=pStyleOf(p);
+    usedStyles.set(sid,(usedStyles.get(sid)||0)+1);
+  }
+  const firstStyle=nonempty.length?pStyleOf(nonempty[0]):null;
+  if(firstStyle==='papertitle') add('PASS','Title','The title uses the template’s title style.');
+  else add('FAIL','Title',`The title isn’t using the template’s title style (it uses “${sl(firstStyle||'unknown')}”).`,'Click in the title and apply the “papertitle” style from the Styles panel.');
+
+  for(const [id,label,severity] of [
+    ['author','Author line','WARNING'],
+    ['address','Affiliation','WARNING'],
+    ['abstract','Abstract','FAIL'],
+    ['keywords','Keywords','WARNING']
+  ]){
+    if(usedStyles.has(id)) add('PASS',label,`Uses the template’s ${sl(id)} style.`);
+    else { const what={author:'author names',address:'affiliation',abstract:'abstract',keywords:'keywords line'}[id]||id; add(severity,label,`The ${what} ${id==='author'?'aren’t':'isn’t'} using the template’s “${id}” style.`,`Click in the ${what} and apply the “${id}” style from the Styles panel.`); }
+  }
+
+  // Abstract label and length.
+  const absParas=nonempty.filter(p=>pStyleOf(p)==='abstract');
+  if(absParas.length){
+    const absText=absParas.map(txtOf).join(' ').trim();
+    if(/^Abstract[.:]/i.test(absText)) add('PASS','Abstract label','The abstract starts with the word “Abstract.”');
+    else add('WARNING','Abstract label','The abstract doesn’t start with the word “Abstract.”','Start the abstract paragraph with “Abstract.” in bold.');
+    const n=wordCount(absText.replace(/^Abstract[.:]?\s*/i,''));
+    if(n>=15&&n<=250) add('PASS','Abstract length',`The abstract is about ${n} words — within the 15–250 word limit.`);
+    else add('WARNING','Abstract length',`The abstract is about ${n} words. Springer asks for 15–250 words.`,n>250?`Shorten the abstract by about ${n-250} words.`:'Expand the abstract to at least 15 words.');
+  }
+
+  const keyParas=nonempty.filter(p=>pStyleOf(p)==='keywords');
+  if(keyParas.length){
+    const kt=keyParas.map(txtOf).join(' ');
+    if(/^Keywords?\s*[:.]/i.test(kt)) add('PASS','Keywords label','The keywords line starts with “Keywords:”.');
+    else add('WARNING','Keywords label','The keywords line doesn’t start with “Keywords:”.','Start the line with “Keywords:” followed by your keywords, e.g. “Keywords: Learning Analytics, Feedback, MOOCs.”');
+  }
+
+  // ---------- Heading hierarchy and numbering ----------
+  const h1=nonempty.filter(p=>pStyleOf(p)==='heading1');
+  const h2=nonempty.filter(p=>pStyleOf(p)==='heading2');
+  const hasRunStyle=(p,id)=>[...q(p,'r')].some(r=>val(child(child(r,'rPr'),'rStyle'))===id);
+  const h3=nonempty.filter(p=>pStyleOf(p)==='heading 3'||hasRunStyle(p,'heading3'));
+  const h4=nonempty.filter(p=>pStyleOf(p)==='heading 4'||hasRunStyle(p,'heading4'));
+  if(h1.length) add('PASS','Section headings',`${h1.length} main section heading${h1.length===1?' uses':'s use'} the Heading 1 style.`);
+  else add('WARNING','Section headings','No main section headings use the template’s Heading 1 style.','Click in each main heading (e.g. “Introduction”) and apply the “heading1” style. It adds the number automatically.');
+  if(h2.length) add('PASS','Subsection headings',`${h2.length} subsection heading${h2.length===1?' uses':'s use'} the Heading 2 style.`);
+  if(h3.length) add('PASS','Level-3 headings',`${h3.length} level-3 heading${h3.length===1?'':'s'} formatted correctly.`);
+  if(h4.length) add('PASS','Level-4 headings',`${h4.length} level-4 heading${h4.length===1?'':'s'} formatted correctly.`);
+
+  const manualHeadings=nonempty.filter(p=>{
+    const sid=pStyleOf(p), t=txtOf(p).trim();
+    return !inTable(p) && (sid==='Normal'||sid==='p1a') && /^\d+(?:\.\d+){0,3}\s+[A-Z]/.test(t) && t.length<130;
+  });
+  if(manualHeadings.length)
+    add('FAIL','Typed-in headings',`${manualHeadings.length} heading${manualHeadings.length===1?' was':'s were'} typed as normal text with a number, e.g. “${shortQuote(txtOf(manualHeadings[0]),60)}”.`,'Delete the typed number, then apply the “heading1” (or “heading2”) style so the template numbers it for you.');
+
+  // References should be H1 with numbering removed.
+  const refHead=nonempty.find(p=>/^References\s*$/i.test(txtOf(p).trim()));
+  if(refHead){
+    if(pStyleOf(refHead)==='heading1') add('PASS','References heading','The “References” heading is formatted correctly.');
+    else add('WARNING','References heading','The “References” heading isn’t using the Heading 1 style.','Apply the “heading1” style to “References”, then remove the number Word adds in front of it.');
+  }
+
+  // ---------- First-paragraph indentation logic ----------
+  // Springer: the first paragraph after a heading, table, figure, equation, caption or list has no indent;
+  // later paragraphs have a first-line indent (template sample text + Technical Instructions §2.4).
+  const exemptPrev=new Set(['heading1','heading2','figurecaption','tablecaption','bulletitem','dashitem','numitem','equation','image','TABLE','IMAGE']);
+  const neutralPrev=new Set(['heading 3','heading 4','abstract','keywords','author','address','papertitle','papersubtitle','acknowledgments','programcode']);
+  let badFirst=0, badSubsequent=0, firstExample='', subsequentExample='';
+  let prevMeaningfulStyle=null;
+  for(const bl of blocks){
+    if(bl.localName==='tbl'){ prevMeaningfulStyle='TABLE'; continue; }
+    const t=txtOf(bl).trim();
+    if(!t){ if(q(bl,'drawing').length) prevMeaningfulStyle='IMAGE'; continue; }
+    const sid=pStyleOf(bl);
+    const runIn=hasRunStyle(bl,'heading3')||hasRunStyle(bl,'heading4');
+    if((sid==='p1a'||sid==='Normal') && !runIn && !q(bl,'oMath').length){
+      const ind=child(child(bl,'pPr'),'ind');
+      const directFirst=ind?.getAttributeNS(w,'firstLine');
+      const effectiveNoIndent=(sid==='p1a') || directFirst==='0';
+      const shouldNoIndent=prevMeaningfulStyle && exemptPrev.has(prevMeaningfulStyle);
+      const neutral=!prevMeaningfulStyle || neutralPrev.has(prevMeaningfulStyle);
+      if(shouldNoIndent && !effectiveNoIndent){ badFirst++; if(!firstExample) firstExample=t; }
+      if(!shouldNoIndent && !neutral && sid==='p1a'){ badSubsequent++; if(!subsequentExample) subsequentExample=t; }
+    }
+    prevMeaningfulStyle=q(bl,'oMath').length?'equation':(runIn?'heading 3':sid);
+  }
+  if(!badFirst) add('PASS','Paragraph indents','Paragraphs after headings, captions and lists correctly start without an indent.');
+  else add('WARNING','Paragraph indents',`${badFirst} paragraph${badFirst===1?' is':'s are'} indented right after a heading, caption or list, e.g. “${shortQuote(firstExample,60)}”. In Springer style, the first paragraph after these has no indent.`,'Click in each of these paragraphs and apply the “p1a” style (no indent).');
+  if(badSubsequent) add('WARNING','Paragraph indents',`${badSubsequent} paragraph${badSubsequent===1?' has':'s have'} no indent where one is expected, e.g. “${shortQuote(subsequentExample,60)}”.`,'Only the first paragraph after a heading is unindented. Apply the “Normal” style to the paragraphs that follow it.');
+
+  // ---------- Direct formatting conflicts ----------
+  const directOverrides=[];
+  for(const p of nonempty){
+    if(inTable(p)) continue; // table text is normally set smaller, as in the template's own table
+    const sid=pStyleOf(p);
+    for(const r of [...q(p,'r')]){
+      const rPr=child(r,'rPr'); if(!rPr) continue;
+      const sz=child(rPr,'sz'), rf=child(rPr,'rFonts');
+      const f=rf?.getAttributeNS(w,'ascii')||rf?.getAttributeNS(w,'hAnsi')||null;
+      const pt=sz?intVal(sz)/2:null;
+      const text=[...q(r,'t')].map(x=>x.textContent).join('').trim();
+      if(!text) continue;
+      const exp=SPRINGER.styles[sid];
+      if(exp?.pt && pt && Math.abs(pt-exp.pt)>.1) directOverrides.push(`“${shortQuote(text,30)}” is ${pt} pt`);
+      if(exp?.font && f && !exp.font.includes(f)) directOverrides.push(`“${shortQuote(text,30)}” is in ${f}`);
+      if(sid==='Normal' && ((pt&&Math.abs(pt-10)>.1)||(f&&f!=='Times New Roman'))) directOverrides.push(`“${shortQuote(text,30)}” is ${[pt?pt+' pt':'',f?'in '+f:''].filter(Boolean).join(' ')}`);
+    }
+  }
+  if(directOverrides.length)
+    add('WARNING','Hand-applied formatting',`${directOverrides.length} bit${directOverrides.length===1?'':'s'} of text ${directOverrides.length===1?'has':'have'} fonts or sizes set by hand instead of by the template, e.g. ${directOverrides.slice(0,3).join('; ')}${directOverrides.length>3?'…':''}.`,'This usually happens when text is pasted in from another document. Select the text, click “Clear All Formatting” on Word’s Home tab, then re-apply the right template style.');
+  else add('PASS','Hand-applied formatting','No fonts or sizes set by hand — the text follows the template styles.');
+
+  // ---------- Lists ----------
+  const listStyles=['bulletitem','dashitem','numitem','arabnumitem'];
+  const lists=nonempty.filter(p=>listStyles.includes(pStyleOf(p)));
+  const manualBullets=nonempty.filter(p=>{
+    const sid=pStyleOf(p),t=txtOf(p).trim();
+    return !inTable(p) && !listStyles.includes(sid) && /^(?:•|●|▪|–|-)\s+/.test(t);
+  });
+  if(lists.length) add('PASS','Lists',`${lists.length} list item${lists.length===1?' uses':'s use'} the template’s list styles.`);
+  if(manualBullets.length) add('WARNING','Lists',`${manualBullets.length} bullet point${manualBullets.length===1?' was':'s were'} typed by hand (e.g. with “•” or “-”).`,'Remove the typed bullet and apply the template’s “bulletitem” (or “numitem”) style instead.');
+
+  // ---------- Figures and captions ----------
+  const figCaps=nonempty.filter(p=>pStyleOf(p)==='figurecaption');
+  const captionLikeFig=nonempty.filter(p=>/^(?:Fig\.|Figure)\s*\d+/i.test(txtOf(p).trim()) && pStyleOf(p)!=='figurecaption');
+  if(figCaps.length) add('PASS','Figure captions',`${figCaps.length} figure caption${figCaps.length===1?' uses':'s use'} the template’s caption style.`);
+  if(captionLikeFig.length) add('FAIL','Figure captions',`${captionLikeFig.length} figure caption${captionLikeFig.length===1?' isn’t':'s aren’t'} using the template’s figure caption style.`,'Click in each caption and apply the “figurecaption” style.');
+  const longFigure=nonempty.filter(p=>/^Figure\s+\d+/i.test(txtOf(p).trim()));
+  if(longFigure.length) add('WARNING','Figure labels',`${longFigure.length} caption${longFigure.length===1?' starts':'s start'} with “Figure”. Springer uses the short form “Fig.”.`,'Change each caption to start “Fig. 1.”, “Fig. 2.” and so on.');
+
+  let badFigPlacement=0;
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i];
+    if(b.localName==='p'&&pStyleOf(b)==='figurecaption'){
+      let j=i-1;
+      while(j>=0&&blocks[j].localName==='p'&&!txtOf(blocks[j]).trim()&&q(blocks[j],'drawing').length===0) j--;
+      const prev=blocks[j];
+      const ok=prev&&prev.localName==='p'&&(q(prev,'drawing').length>0||pStyleOf(prev)==='image');
+      if(!ok) badFigPlacement++;
+    }
+  }
+  if(figCaps.length){
+    if(badFigPlacement) add('WARNING','Figure captions',`${badFigPlacement} figure caption${badFigPlacement===1?' isn’t':'s aren’t'} directly below the figure.`,'Move each figure caption so it sits immediately below its figure.');
+    else add('PASS','Figure captions','Figure captions sit below their figures.');
+  }
+
+  // ---------- Tables and captions ----------
+  const tableCaps=nonempty.filter(p=>pStyleOf(p)==='tablecaption');
+  const captionLikeTable=nonempty.filter(p=>/^Table\s+\d+/i.test(txtOf(p).trim())&&pStyleOf(p)!=='tablecaption');
+  if(tableCaps.length) add('PASS','Table captions',`${tableCaps.length} table caption${tableCaps.length===1?' uses':'s use'} the template’s caption style.`);
+  if(captionLikeTable.length) add('FAIL','Table captions',`${captionLikeTable.length} table caption${captionLikeTable.length===1?' isn’t':'s aren’t'} using the template’s table caption style.`,'Click in each caption and apply the “tablecaption” style.');
+
+  let badTablePlacement=0;
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i];
+    if(b.localName==='p'&&pStyleOf(b)==='tablecaption'){
+      let j=i+1;
+      while(j<blocks.length&&blocks[j].localName==='p'&&!txtOf(blocks[j]).trim()) j++;
+      if(!blocks[j]||blocks[j].localName!=='tbl') badTablePlacement++;
+    }
+  }
+  if(tableCaps.length){
+    if(badTablePlacement) add('WARNING','Table captions',`${badTablePlacement} table caption${badTablePlacement===1?' isn’t':'s aren’t'} directly above the table.`,'Move each table caption so it sits immediately above its table.');
+    else add('PASS','Table captions','Table captions sit above their tables.');
+  }
+
+  // Captions that span multiple lines should be justified; approximate from paragraph alignment.
+  const multiCaptionIssues=[];
+  for(const p of [...figCaps,...tableCaps]){
+    const t=txtOf(p);
+    if(t.length>100){
+      const jc=val(child(child(p,'pPr'),'jc')) || styleProps(pStyleOf(p))?.align;
+      if(jc!=='both') multiCaptionIssues.push(t.slice(0,65));
+    }
+  }
+  if(multiCaptionIssues.length) add('WARNING','Long captions',`${multiCaptionIssues.length} caption${multiCaptionIssues.length===1?' runs':'s run'} over more than one line but ${multiCaptionIssues.length===1?'is':'are'} centred.`,'Captions longer than one line should be justified (aligned to both edges) — select the caption and press Ctrl/Cmd+J.');
+
+  // ---------- Equations ----------
+  const mathParas=nonempty.filter(p=>q(p,'oMath').length||q(p,'oMathPara').length);
+  const badEq=mathParas.filter(p=>pStyleOf(p)!=='equation');
+  if(mathParas.length){
+    if(badEq.length) add('WARNING','Equations',`${badEq.length} equation${badEq.length===1?' isn’t':'s aren’t'} using the template’s equation style.`,'Click in each displayed equation and apply the “equation” style.');
+    else add('PASS','Equations',`${mathParas.length} equation${mathParas.length===1?' uses':'s use'} the template’s equation style.`);
+  }
+
+  // ---------- Program/code ----------
+  const codeParas=nonempty.filter(p=>pStyleOf(p)==='programcode');
+  if(codeParas.length) add('PASS','Program code',`${codeParas.length} code line${codeParas.length===1?' uses':'s use'} the template’s code style.`);
+
+  // ---------- References ----------
+  const refs=nonempty.filter(p=>pStyleOf(p)==='referenceitem');
+  if(refs.length) add('PASS','Reference list',`${refs.length} reference${refs.length===1?' uses':'s use'} the template’s reference style.`);
+  else if(refHead) add('WARNING','Reference list','The references aren’t using the template’s reference style.','Select the whole reference list and apply the “referenceitem” style. It numbers and indents entries for you.');
+  checkCitationStyle(fullText);
+
+  // ---------- Acknowledgments and disclosure ----------
+  const ackLike=nonempty.filter(p=>/^(Acknowledg(?:e)?ments|Disclosure of Interests)\b/i.test(txtOf(p).trim()));
+  const wrongAck=ackLike.filter(p=>pStyleOf(p)!=='acknowledgments');
+  if(ackLike.length && !wrongAck.length) add('PASS','Acknowledgments','Acknowledgments are formatted correctly (9 pt).');
+  if(wrongAck.length) add('WARNING','Acknowledgments','The acknowledgments section isn’t using the template’s acknowledgments style (smaller 9 pt text).','Click in the acknowledgments and apply the “acknowledgments” style.');
+
+  // ---------- ORCID and e-mail/URL ----------
+  checkOrcids(fullText);
+
+  let emailRuns=0, emailStyled=0, urlRuns=0, urlStyled=0;
+  for(const p of paras.filter(p=>['address','author'].includes(pStyleOf(p)))){
+    for(const r of [...q(p,'r')]){
+      const t=[...q(r,'t')].map(x=>x.textContent).join('');
+      if(!t) continue;
+      const rs=normalizeStyleId(val(child(child(r,'rPr'),'rStyle')));
+      if(/@/.test(t)){ emailRuns++; if(rs==='e-mail'||rs==='url') emailStyled++; }
+      if(/https?:\/\/|www\./i.test(t)){ urlRuns++; if(rs==='url'||rs==='e-mail') urlStyled++; }
+    }
+  }
+  if(emailRuns){
+    if(emailStyled===emailRuns) add('PASS','E-mail addresses','E-mail addresses use the template’s e-mail style.');
+    else add('WARNING','E-mail addresses',`${emailRuns-emailStyled} e-mail address${emailRuns-emailStyled===1?' isn’t':'es aren’t'} in the template’s e-mail style (typewriter font).`,'Select each e-mail address and apply the “e-mail” character style.');
+  }
+  if(urlRuns && urlStyled<urlRuns) add('WARNING','Web links',`${urlRuns-urlStyled} web link${urlRuns-urlStyled===1?' in the affiliation isn’t':'s in the affiliations aren’t'} in the template’s URL style (typewriter font).`,'Select each web address and apply the “url” character style.');
+
+  // ---------- Width of drawings/tables ----------
+  const textWidthTwips=SPRINGER.pageWidthTwips-SPRINGER.margins.left-SPRINGER.margins.right;
+  const textWidthEmu=textWidthTwips*635;
+  const extents=[...doc.getElementsByTagNameNS(wp,'extent')];
+  const oversized=extents.filter(e=>parseInt(e.getAttribute('cx')||'0',10)>textWidthEmu*1.03);
+  if(extents.length){
+    if(oversized.length) add('WARNING','Figure width',`${oversized.length} figure${oversized.length===1?' is':'s are'} wider than the text column and will spill into the margin.`,'Resize these figures to 12.2 cm wide or less.');
+    else add('PASS','Figure width',`All ${extents.length} figure${extents.length===1?' fits':'s fit'} within the text column.`);
+  }
+
+  const tables=[...q(doc,'tbl')]; let wideTables=0;
+  for(const t of tables){
+    const pr=child(t,'tblPr'), tw=child(pr,'tblW');
+    const type=tw?.getAttributeNS(w,'type'), width=parseInt(tw?.getAttributeNS(w,'w')||'0',10);
+    if(type==='dxa'&&width>textWidthTwips*1.03) wideTables++;
+  }
+  if(tables.length){
+    if(wideTables) add('WARNING','Table width',`${wideTables} table${wideTables===1?' is':'s are'} wider than the text column.`,'Make these tables 12.2 cm wide or less — reduce column widths, shorten headings, or split the table.');
+    else add('PASS','Table width',`All ${tables.length} table${tables.length===1?' fits':'s fit'} within the text column.`);
+  }
+
+  // ---------- Rules from Springer's documentation ----------
+  {
+    const titleP=nonempty.find(p=>pStyleOf(p)==='papertitle')||nonempty[0];
+    if(titleP) checkTitleRules(txtOf(titleP));
+    const kwP=nonempty.filter(p=>pStyleOf(p)==='keywords' || /^Keywords?\s*[:.]/i.test(txtOf(p).trim()));
+    if(kwP.length) checkKeywordCaps(kwP.map(txtOf).join(' '));
+    const texts=nonempty.map(p=>txtOf(p).trim());
+    const refI=nonempty.findIndex(p=>/^References\s*$/i.test(txtOf(p).trim()));
+    const credI=texts.findIndex(t=>/^(Acknowledg(?:e)?ments?|Disclosure of Interests)\b/i.test(t));
+    checkCredits(texts.some(t=>/Disclosure of Interests/i.test(t)), refI>=0 && credI>refI);
+    const capP=nonempty.filter(p=>['figurecaption','tablecaption'].includes(pStyleOf(p)) || /^(?:Fig\.|Figure|Table)\s*\d+\s*[.:]/i.test(txtOf(p).trim()));
+    checkCaptionPunctuation(capP.map(txtOf));
+    const figN=capP.map(p=>txtOf(p).trim().match(/^(?:Fig\.|Figure)\s*(\d+)/i)).filter(Boolean).map(m=>+m[1]);
+    const tabN=capP.map(p=>txtOf(p).trim().match(/^Table\s*(\d+)/i)).filter(Boolean).map(m=>+m[1]);
+    checkFloatsReferenced(nonempty.filter(p=>!capP.includes(p)).map(txtOf).join(' '), figN, tabN);
+    checkHeadingDepth(nonempty.filter(p=>!inTable(p)).map(p=>txtOf(p).trim()));
+    const refEntries=refI>=0 ? nonempty.slice(refI+1).filter(p=>!inTable(p)).map(txtOf) : nonempty.filter(p=>pStyleOf(p)==='referenceitem').map(txtOf);
+    checkReferenceFormat(refEntries);
+
+    // llncsdoc §10: alternative text is required for figures.
+    const pics=[...doc.getElementsByTagNameNS(wp,'docPr')];
+    if(pics.length){
+      const noAlt=pics.filter(d=>!(d.getAttribute('descr')||'').trim()).length;
+      if(noAlt) add('WARNING','Alt text',`${noAlt} of ${pics.length} image${pics.length===1?' has':'s have'} no alternative text. Springer requires alt text for every figure.`,
+        'In Word, right-click each image → View Alt Text, and write one or two sentences describing what the figure shows.');
+      else add('PASS','Alt text',`All ${pics.length} image${pics.length===1?' has':'s have'} alternative text.`);
+    }
+
+    // Quick Start / Technical Instructions §1.2: name the file Surname_ShortTitle.docx
+    if(!/^[\p{Lu}][\p{L}'-]+_[\p{L}\d]/u.test(file.name))
+      add('INFO','File name',`The file is named “${file.name}”. Springer asks for your surname and a short title, e.g. “Sharma_LearningAnalytics.docx”.`,'Rename the file before the final submission.');
+  }
+
+  // ---------- Author names ----------
+  {
+    let authorText=nonempty.filter(p=>pStyleOf(p)==='author').map(txtOf).join(', ');
+    let src='author style';
+    if(!authorText.trim()){
+      // Fallback: paragraphs between the title and the abstract that are not affiliations
+      const ti=nonempty.findIndex(p=>pStyleOf(p)==='papertitle');
+      const ai=nonempty.findIndex(p=>pStyleOf(p)==='abstract' || /^Abstract\b/i.test(txtOf(p).trim()));
+      const from=ti>=0?ti+1:1, to=ai>ti?ai:Math.min(nonempty.length,from+6);
+      authorText=nonempty.slice(from,to).filter(p=>pStyleOf(p)!=='address'&&pStyleOf(p)!=='papersubtitle').map(txtOf).filter(t=>!AFFILIATION_WORDS.test(t)&&!looksLikeSentence(t)).join(', ');
+      src='between title and abstract';
+    }
+    checkAuthorNames(authorText);
+  }
+
+  // ---------- Paper length ----------
+  {
+    const appXml=zip.file('docProps/app.xml') ? await zip.file('docProps/app.xml').async('text') : '';
+    const m=appXml.match(/<Pages>(\d+)<\/Pages>/);
+    if(m && parseInt(m[1],10)>0) checkPaperLength(parseInt(m[1],10),false);
+    else { const c=selectedCategory(); add('INFO','Paper length',`This Word file doesn’t say how many pages it has, so its length wasn’t checked.`,`Export the paper to PDF and check the PDF — a ${c.label.toLowerCase()} must be ${c.min}–${c.max} pages including references.`); }
+  }
+
+  // ---------- Template fingerprint conclusion ----------
+  const fingerprintStyles=['papertitle','author','address','abstract','keywords','heading1','figurecaption','tablecaption','referenceitem'];
+  const fpPresent=fingerprintStyles.filter(x=>styleById.has(x)).length;
+  const fpUsed=fingerprintStyles.filter(x=>usedStyles.has(x)).length;
+  if(fpPresent>=8 && fpUsed>=5 && diffs.length<=3)
+    add('PASS','Overall template','The paper is built on the Springer template and uses its styles correctly.');
+  else if(fpPresent>=7)
+    add('WARNING','Overall template','The Springer template is there, but parts of the paper have been formatted by hand instead of with its styles.','Go through the items above, re-applying the template styles where suggested.');
+  else
+    add('FAIL','Overall template','This file doesn’t appear to be based on the Springer template.','Download the official Springer template, paste your content into it, and apply its styles to the title, authors, headings, captions and references.');
+
+  add('INFO','Also check yourself','This tool checks formatting only. It doesn’t check your writing, image quality, or permission to reuse figures.','Before submitting, read through the T4E 2026 submission guidelines once more.');
+  setProgress(96);
+}
+
+</script>
+</body>
+</html>
