@@ -181,10 +181,9 @@
   td:last-child{color:var(--ink)}
   .badge{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:600;letter-spacing:-.005em;white-space:nowrap;text-transform:capitalize}
   .badge::before{content:"";width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px color-mix(in srgb,currentColor 14%,transparent)}
-  .PASS{color:var(--good)} .WARNING{color:var(--warn)} .FAIL{color:var(--bad)} .INFO{color:var(--info)}
+  .PASS{color:var(--good)} .FAIL{color:var(--bad)} .INFO{color:var(--info)}
 
   #resultRows[data-filter="FAIL"] tr:not(:has(.badge.FAIL)),
-  #resultRows[data-filter="WARNING"] tr:not(:has(.badge.WARNING)),
   #resultRows[data-filter="PASS"] tr:not(:has(.badge.PASS)),
   #resultRows[data-filter="INFO"] tr:not(:has(.badge.INFO)){display:none}
 
@@ -313,11 +312,11 @@
     </div>
 
     <div class="bento">
-      <div class="metric bad"><div class="t">Needs fixing</div><div><div class="n" id="failN">0</div></div></div>
-      <div class="metric warn"><div class="t">Warnings</div><div class="n" id="warnN">0</div></div>
+      <div class="metric bad"><div class="t">To fix</div><div><div class="n" id="failN">0</div></div></div>
       <div class="metric good"><div class="t">Passed</div><div class="n" id="passN">0</div></div>
+      <div class="metric total"><div class="t">Checks run</div><div class="n" id="totalN">0</div></div>
       <div class="summary">
-        <h2>Summary · <span id="totalN">0</span> checks run</h2>
+        <h2>Summary</h2>
         <p id="summaryText"></p>
       </div>
     </div>
@@ -327,8 +326,7 @@
       <div class="toolbar">
         <div class="seg" role="group" aria-label="Filter findings">
           <button type="button" data-f="ALL" aria-pressed="true">All</button>
-          <button type="button" data-f="FAIL" aria-pressed="false">Fix</button>
-          <button type="button" data-f="WARNING" aria-pressed="false">Warnings</button>
+          <button type="button" data-f="FAIL" aria-pressed="false">To fix</button>
           <button type="button" data-f="PASS" aria-pressed="false">Passed</button>
           <button type="button" data-f="INFO" aria-pressed="false">Info</button>
         </div>
@@ -396,7 +394,7 @@
     return {
       file:document.querySelector('#fileMeta .filename')?.textContent||'manuscript',
       summary:$('#summaryText').textContent,
-      fail:$('#failN').textContent,warn:$('#warnN').textContent,pass:$('#passN').textContent,total:$('#totalN').textContent,
+      fail:$('#failN').textContent,pass:$('#passN').textContent,total:$('#totalN').textContent,
       date:new Date().toLocaleString()
     };
   }
@@ -414,7 +412,7 @@
       ['T4E 2026 Springer Format Check'].map(q).join(','),
       ['File',m.file].map(q).join(','),
       ['Generated',m.date].map(q).join(','),
-      ['Needs fixing',m.fail,'Warnings',m.warn,'Passed',m.pass,'Checks run',m.total].map(q).join(','),
+      ['To fix',m.fail,'Passed',m.pass,'Checks run',m.total].map(q).join(','),
       ['Summary',m.summary].map(q).join(','),
       '',
       ['Status','Check','What we found','How to fix it'].map(q).join(','),
@@ -436,8 +434,8 @@
     doc.setFontSize(24); doc.setTextColor(29,29,31); doc.text('Format check report',M,84);
     doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor(110,110,115);
     doc.text(doc.splitTextToSize(m.file,W-2*M),M,104); doc.text(m.date,M,118);
-    const boxes=[['Needs fixing',m.fail,[227,38,28]],['Warnings',m.warn,[199,119,0]],['Passed',m.pass,[29,157,79]],['Checks run',m.total,[29,29,31]]];
-    const bw=(W-2*M-3*10)/4;
+    const boxes=[['To fix',m.fail,[227,38,28]],['Passed',m.pass,[29,157,79]],['Checks run',m.total,[29,29,31]]];
+    const bw=(W-2*M-2*10)/3;
     boxes.forEach(([t,n,c],i)=>{
       const x=M+i*(bw+10); doc.setFillColor(245,245,247); doc.roundedRect(x,136,bw,62,10,10,'F');
       doc.setFontSize(8.5); doc.setTextColor(110,110,115); doc.text(t.toUpperCase(),x+12,154);
@@ -445,7 +443,7 @@
     });
     doc.setFontSize(11); doc.setTextColor(29,29,31);
     const sl=doc.splitTextToSize(m.summary,W-2*M); doc.text(sl,M,224);
-    const colors={FAIL:[227,38,28],WARNING:[199,119,0],PASS:[29,157,79],INFO:[0,113,227]};
+    const colors={Fix:[227,38,28],Pass:[29,157,79],Info:[0,113,227]};
     doc.autoTable({
       startY:232+sl.length*13,
       margin:{left:M,right:M,bottom:44},
@@ -520,7 +518,9 @@ const SPRINGER = {
 };
 
 function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const STATUS_LABEL={FAIL:'Fix',PASS:'Pass',INFO:'Info'};
 function add(status, check, found, fix=''){
+  if(status==='WARNING') status='FAIL'; // no warnings: anything to change is a fix
   results.push({status,check,found,fix});
 }
 function setProgress(v){
@@ -569,15 +569,14 @@ function render(){
   const priority={FAIL:0,WARNING:1,INFO:2,PASS:3};
   results.sort((a,b)=>priority[a.status]-priority[b.status]);
   const counts={PASS:0,WARNING:0,FAIL:0,INFO:0}; results.forEach(r=>counts[r.status]++);
-  $('#passN').textContent=counts.PASS; $('#warnN').textContent=counts.WARNING; $('#failN').textContent=counts.FAIL; $('#totalN').textContent=results.length;
+  $('#passN').textContent=counts.PASS; $('#failN').textContent=counts.FAIL; $('#totalN').textContent=results.length;
   let s='';
   if(counts.FAIL) s=`${counts.FAIL} thing${counts.FAIL>1?'s':''} must be fixed before you submit`;
-  else s='Nothing must be fixed';
-  if(counts.WARNING) s+=`, and ${counts.WARNING} more ${counts.WARNING>1?'are':'is'} worth a look`;
-  s+=`. ${counts.PASS} check${counts.PASS===1?'':'s'} passed. Start with the red items below — each one says exactly what to change.`;
+  else s='Nothing to fix — your paper is ready on every check';
+  s+=counts.FAIL?`. ${counts.PASS} check${counts.PASS===1?'':'s'} passed. Each red item below says exactly what to change.`:` (${counts.PASS} checks passed).`;
   $('#summaryText').textContent=s;
   $('#resultRows').innerHTML=results.map(r=>`<tr>
-    <td><span class="badge ${r.status}">${r.status}</span></td>
+    <td><span class="badge ${r.status}">${STATUS_LABEL[r.status]||r.status}</span></td>
     <td><strong>${esc(r.check)}</strong></td>
     <td>${esc(r.found)}</td>
     <td>${esc(r.fix||'No change needed.')}</td>
@@ -590,7 +589,7 @@ $('#copyBtn').addEventListener('click',async()=>{
   const lines=[`T4E 2026 Springer format check summary for ${selectedFile?.name||'manuscript'}`,''];
   for(const r of results){
     if(r.status==='PASS') continue;
-    lines.push(`${r.status} | ${r.check}`);
+    lines.push(`${STATUS_LABEL[r.status]||r.status} | ${r.check}`);
     lines.push(`Found: ${r.found}`);
     lines.push(`Fix: ${r.fix}`);
     lines.push('');
