@@ -228,6 +228,7 @@
   .gfoot{background:var(--bg-2);border-top:1px solid var(--hair-2);margin-top:64px}
   .gfoot-in{max-width:1024px;margin:0 auto;padding:20px 22px 30px;font-size:12px;color:var(--faint);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
   .gfoot a{color:var(--ink-2)}
+  .visits{margin-left:10px;padding-left:10px;border-left:1px solid var(--hair);font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -246,7 +247,7 @@
 <section class="hero">
   <div class="eyebrow fade-in">T4E 2026</div>
   <h1 class="fade-in d2">Format Check.</h1>
-  <p class="lede fade-in d3">Your manuscript, checked against the Springer template in seconds. Right in your browser. Nothing ever leaves it.</p>
+  <p class="lede fade-in d3">Your manuscript, checked against the Springer template in seconds. Right in your browser — your paper never leaves it. We only count visits.</p>
   <div class="ctas fade-in d3">
     <a href="#upload">Check your paper</a>
     <a href="https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0" target="_blank" rel="noopener">Read the guidelines</a>
@@ -358,7 +359,7 @@
 
 <footer class="gfoot">
   <div class="gfoot-in">
-    <span>T4E 2026 · Technology for Education</span>
+    <span>T4E 2026 · Technology for Education<span class="visits" id="visitCount" hidden></span></span>
     <span>This check is an aid, not a guarantee. Always confirm against the <a href="https://sites.google.com/view/t4e2026/call-for-papers/submission-guidelines?authuser=0" target="_blank" rel="noopener">official guidelines</a>.</span>
   </div>
 </footer>
@@ -563,6 +564,13 @@ async function analyze(){
     add('FAIL','Couldn’t read the file','Something went wrong while reading this file'+(err&&err.message?` (${err.message})`:'')+'.','Save or export the paper again and re-upload it. If it keeps failing, try the other format (PDF or .docx).');
   }
   setProgress(100); render(); analyzeBtn.disabled=false;
+  // Visitor counter: records only that a check ran (file type, category, result) — never the file or its contents.
+  try{
+    const cat=document.querySelector('input[name="cat"]:checked')?.value||'long';
+    const fixes=results.filter(r=>r.status==='FAIL').length;
+    window.goatcounter?.count?.({path:`check-${ext}-${cat}`, title:'Paper checked', event:true});
+    window.goatcounter?.count?.({path:fixes?'result-needs-fixes':'result-all-passed', title:'Check result', event:true});
+  }catch(e){}
 }
 
 function render(){
@@ -1627,6 +1635,31 @@ async function analyzeWord(file,ext){
   setProgress(96);
 }
 
+</script>
+<!-- ===== Visitor counter (GoatCounter) =====
+     Put your GoatCounter code between the quotes, e.g. 't4e2026'.
+     Leave it empty to switch counting off. -->
+<script>
+  const GOATCOUNTER_CODE = 'sumegh';
+  if (GOATCOUNTER_CODE) {
+    const gc = document.createElement('script');
+    gc.async = true;
+    gc.src = 'https://gc.zgo.at/count.js';
+    gc.dataset.goatcounter = 'https://' + GOATCOUNTER_CODE + '.goatcounter.com/count';
+    document.body.appendChild(gc);
+
+    // Small public visitor count in the footer. Needs "Allow adding visitor counts
+    // on your website" switched on in GoatCounter's site settings; stays hidden otherwise.
+    fetch('https://' + GOATCOUNTER_CODE + '.goatcounter.com/counter/' + encodeURIComponent(location.pathname) + '.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.count) return;
+        var el = document.getElementById('visitCount');
+        el.textContent = 'Visitors: ' + d.count;
+        el.hidden = false;
+      })
+      .catch(function () {});
+  }
 </script>
 </body>
 </html>
